@@ -5,7 +5,7 @@ A simple, mobile-friendly React dashboard for AI-powered invoice processing targ
 ## Features
 - Drag & drop invoice upload (PDF / JPG / PNG)
 - Real-time processing with progress + states
-- Extracted data preview with line items table
+- Extracted data preview with line items t able
 - Save invoices (persisted locally + API integration)
 - Searchable, filterable, sortable invoice list
 - Details modal with PDF export
