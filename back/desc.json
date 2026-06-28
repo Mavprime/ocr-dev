@@ -1,0 +1,104 @@
+{
+  "name": "Addis Invoice OCR",
+  "version": "3.0",
+  "description": "AI-powered invoice processing pipeline for small businesses in Addis Ababa, Ethiopia. Users upload invoices (PDF/JPG/PNG) via a React web dashboard or a Telegram bot. n8n orchestrates Google Document AI for OCR text extraction and DeepSeek for structured data parsing. Extracted data (vendor, date, line items, grand total) is written to Google Sheets and surfaced in a searchable, filterable invoice history with detail modals and PDF export.",
+  "architecture": {
+    "frontend": {
+      "name": "addis-invoice-dashboard",
+      "framework": "React 18 + TypeScript + Tailwind CSS",
+      "port": 3000,
+      "build_tool": "Vite 5",
+      "key_dependencies": [
+        "axios",
+        "react-router-dom",
+        "react-hot-toast",
+        "react-icons",
+        "date-fns",
+        "jspdf + jspdf-autotable"
+      ],
+      "pages": {
+        "/": "Landing page",
+        "/upload": "Drag-and-drop invoice upload with progress bar, processing spinner, and result card with detail modal",
+        "/invoices": "Searchable, filterable, sortable invoice history table with detail modal and PDF download"
+      },
+      "components": [
+        "UploadZone — drag-and-drop file upload area with validation",
+        "ProcessingSpinner — animated spinner shown during OCR+AI extraction",
+        "ResultsCard — extracted invoice preview with line items table and action buttons (Save, Download, View Invoice, Upload Another)",
+        "FilterBar — search, date range, and clear filters for invoice list",
+        "InvoiceTable — paginated, sortable table with eye/view, download, and delete actions",
+        "DetailsModal — full-screen overlay showing vendor, date, total, source, line items, items summary, and PDF export"
+      ],
+      "hooks": {
+        "useInvoiceUpload": "Manages upload lifecycle — idle → uploading → processing → uploaded/completed/failed. Posts multipart FormData to n8n webhook. Handles progress, timeout (150s), CORS, and React StrictMode remount safety.",
+        "useInvoiceList": "Fetches invoice history from n8n get-invoices webhook. Provides search, date filtering, sorting, pagination, and delete (local hide)."
+      }
+    },
+    "backend": {
+      "platform": "n8n workflow automation",
+      "instance": "https://n8n.magnetai.cc (port 5678 locally)",
+      "workflows": {
+        "OCR-3.0-web": {
+          "file": "OCR-3.0-web.json",
+          "description": "Main invoice processing workflow with dual entry points (Web + Telegram). Uses asynchronous Respond to Webhook pattern for immediate user feedback.",
+          "web_path": {
+            "trigger": "POST /webhook/web-invoice-upload (multipart/form-data)",
+            "flow": [
+              "1. Webhook receives file upload",
+              "2. Generate Job ID — creates job_id, status=queued, passes binary file",
+              "3. Respond to Webhook — immediately returns {\"status\":\"success\",\"message\":\"...\"} with CORS headers",
+              "4. Extract from File — Google Document AI OCR text extraction",
+              "5. Switch PDF/Image — routes to appropriate HTTP Request node",
+              "6. AI Agent + DeepSeek Chat Model + Structured Output Parser — parses vendor, date, items, grand_total from extracted text",
+              "7. Edit Fields — normalizes and formats extracted data",
+              "8. Append or update row in sheet — writes to Google Sheets",
+              "9. Switch → Send Telegram notification on success"
+            ]
+          },
+          "telegram_path": {
+            "trigger": "Telegram bot receives invoice file",
+            "flow": [
+              "1. Telegram Trigger — listens for file messages",
+              "2. Get a file — downloads file from Telegram",
+              "3. Extract from File — Google Document AI OCR",
+              "4. Switch PDF/Image → HTTP Request",
+              "5. Converges with web path at AI Agent for parsing and Sheets storage"
+            ]
+          },
+          "ai_models": {
+            "ocr": "Google Document AI (via n8n Extract from File node)",
+            "parsing": "DeepSeek Chat Model (via n8n LangChain nodes with Structured Output Parser)"
+          },
+          "cors": {
+            "webhook_trigger": "allowedOrigins: *",
+            "respond_node": "Access-Control-Allow-Origin: *"
+          },
+          "response_format": {
+            "immediate_ack": { "status": "success", "message": "File uploaded successfully! Your invoice is being processed in the background." },
+            "async_result": "Written to Google Sheets, surfaced via get-invoices webhook"
+          }
+        },
+        "get-invoices": {
+          "file": "get-invoices-workflow.json",
+          "description": "GET webhook that returns the 15 most recent invoice rows from Google Sheets as JSON array."
+        }
+      },
+      "data_store": "Google Sheets (append/update rows via n8n Google Sheets node)"
+    }
+  },
+  "data_flow": {
+    "upload": "User drops file → Frontend POST to n8n webhook → n8n acknowledges immediately → Background: Document AI OCR → DeepSeek AI parsing → Google Sheets",
+    "history": "Frontend GET /get-invoices → n8n reads Google Sheets → Returns last 15 rows → Frontend displays in sortable/filterable table",
+    "detail_view": "User clicks View Invoice → Frontend opens DetailsModal overlay with full invoice data (vendor, date, line items, total, summary) and PDF download"
+  },
+  "key_fixes_applied": [
+    "Removed manual Content-Type: multipart/form-data header — let axios set boundary automatically",
+    "Fixed React StrictMode double-mount bug — mountedRef not reset to true on remount, silently dropping all upload state callbacks",
+    "Added View Invoice button to upload result screen — fetches latest invoice from API and opens DetailsModal with full detail view and PDF download"
+  ],
+  "target_users": "Small businesses in Addis Ababa, Ethiopia. Supports Amharic and English invoice formats.",
+  "currency": "ETB (Ethiopian Birr)",
+  "supported_formats": ["PDF", "JPG", "JPEG", "PNG"],
+  "max_file_size": "10 MB",
+  "processing_timeout": "150 seconds"
+}
