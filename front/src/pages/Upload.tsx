@@ -4,13 +4,16 @@ import UploadZone from '../components/UploadZone';
 import ResultsCard from '../components/ResultsCard';
 import DetailsModal from '../components/DetailsModal';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { Invoice } from '../types/invoice';
+import api from '../lib/api';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import toast from 'react-hot-toast';
 
-const INVOICES_URL = import.meta.env.VITE_API_INVOICES_URL;
+// Full URL override (VITE_API_INVOICES_URL) takes precedence for backward compat.
+// Otherwise uses the shared api instance (VITE_API_BASE_URL) + default path.
+const INVOICES_URL =
+  import.meta.env.VITE_API_INVOICES_URL || '/webhook/get-invoices';
 
 const MAX_HISTORY = 15;
 
@@ -30,7 +33,7 @@ const normalizeInvoice = (raw: any, idx: number): Invoice => {
 };
 
 const fetchLatestInvoice = async (): Promise<Invoice | null> => {
-  const response = await axios.get(INVOICES_URL, { timeout: 20000 });
+  const response = await api.get(INVOICES_URL, { timeout: 20000 });
   const body = response.data;
   const rows: any[] = Array.isArray(body)
     ? body
