@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { Invoice } from '../types/invoice';
+import api from '../lib/api';
 
-// Full URL of the n8n "get-invoices" webhook (returns the 15 most recent rows from Google Sheets).
+// Full URL override (VITE_API_INVOICES_URL) takes precedence for backward compat.
+// Otherwise uses the shared api instance (VITE_API_BASE_URL) + default path.
 const INVOICES_URL =
-  import.meta.env.VITE_API_INVOICES_URL ||
-  `${import.meta.env.VITE_N8N_WEBHOOK_URL || 'http://localhost:5678/webhook'}/get-invoices`;
+  import.meta.env.VITE_API_INVOICES_URL || '/webhook/get-invoices';
 
 const MAX_HISTORY = 15;
 
@@ -62,7 +63,7 @@ export const useInvoiceList = (): UseInvoiceListReturn => {
     setError(null);
 
     try {
-      const response = await axios.get(INVOICES_URL, { timeout: 20000 });
+      const response = await api.get(INVOICES_URL, { timeout: 20000 });
 
       // n8n may return a bare array, { data: [...] }, or — when the sheet has a
       // single row — a bare object. Normalize all of these to an array.
