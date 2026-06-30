@@ -4,10 +4,8 @@ import toast from 'react-hot-toast';
 import { InvoiceData, JobStatus } from '../types/invoice';
 import api from '../lib/api';
 
-// Full URL override (VITE_API_UPLOAD_URL) takes precedence for backward compat.
-// Otherwise uses the shared api instance (VITE_API_BASE_URL) + default path.
-const UPLOAD_URL =
-  import.meta.env.VITE_API_UPLOAD_URL || '/webhook/web-invoice-upload';
+// Webhook trigger path appended to VITE_API_URL (or its localhost fallback).
+const UPLOAD_PATH = 'web-invoice-upload';
 
 /**
  * The n8n web flow is synchronous: it receives the file, runs Google Document AI
@@ -105,7 +103,7 @@ export const useInvoiceUpload = (): UseInvoiceUploadReturn => {
     const controller = new AbortController();
     abortRef.current = controller;
 
-    api.post(UPLOAD_URL, formData, {
+    api.post(UPLOAD_PATH, formData, {
       timeout: PROCESS_TIMEOUT,
       signal: controller.signal,
       onUploadProgress: (progressEvent) => {

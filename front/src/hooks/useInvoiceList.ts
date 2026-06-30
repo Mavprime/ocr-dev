@@ -3,10 +3,8 @@ import axios from 'axios';
 import { Invoice } from '../types/invoice';
 import api from '../lib/api';
 
-// Full URL override (VITE_API_INVOICES_URL) takes precedence for backward compat.
-// Otherwise uses the shared api instance (VITE_API_BASE_URL) + default path.
-const INVOICES_URL =
-  import.meta.env.VITE_API_INVOICES_URL || '/webhook/get-invoices';
+// Webhook trigger path appended to VITE_API_URL (or its localhost fallback).
+const INVOICES_PATH = 'get-invoices';
 
 const MAX_HISTORY = 15;
 
@@ -63,7 +61,7 @@ export const useInvoiceList = (): UseInvoiceListReturn => {
     setError(null);
 
     try {
-      const response = await api.get(INVOICES_URL, { timeout: 20000 });
+      const response = await api.get(INVOICES_PATH, { timeout: 20000 });
 
       // n8n may return a bare array, { data: [...] }, or — when the sheet has a
       // single row — a bare object. Normalize all of these to an array.

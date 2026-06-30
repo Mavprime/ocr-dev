@@ -1,9 +1,8 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  readonly VITE_N8N_WEBHOOK_URL: string
-  readonly VITE_API_UPLOAD_URL: string
-  readonly VITE_API_INVOICES_URL: string
+  /** Base URL for n8n webhooks (set in .env.development / .env.production). */
+  readonly VITE_API_URL: string
 }
 
 interface ImportMeta {
