@@ -10,10 +10,8 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import toast from 'react-hot-toast';
 
-// Full URL override (VITE_API_INVOICES_URL) takes precedence for backward compat.
-// Otherwise uses the shared api instance (VITE_API_BASE_URL) + default path.
-const INVOICES_URL =
-  import.meta.env.VITE_API_INVOICES_URL || '/webhook/get-invoices';
+// Webhook trigger path appended to VITE_API_URL (or its localhost fallback).
+const INVOICES_PATH = 'get-invoices';
 
 const MAX_HISTORY = 15;
 
@@ -33,7 +31,7 @@ const normalizeInvoice = (raw: any, idx: number): Invoice => {
 };
 
 const fetchLatestInvoice = async (): Promise<Invoice | null> => {
-  const response = await api.get(INVOICES_URL, { timeout: 20000 });
+  const response = await api.get(INVOICES_PATH, { timeout: 20000 });
   const body = response.data;
   const rows: any[] = Array.isArray(body)
     ? body

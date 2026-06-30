@@ -1,21 +1,18 @@
 import axios from 'axios';
 
 /**
- * Shared Axios instance pre-configured with the n8n base URL.
+ * Shared Axios instance pre-configured with the n8n webhook base URL.
  *
- * Set VITE_API_BASE_URL in your environment (e.g. https://n8n.magnetai.cc).
- * Falls back to http://localhost:5678 (the default n8n port) for local dev.
+ * Set VITE_API_URL in .env.development / .env.production.
+ * Falls back to http://localhost:5678/webhook/ for local dev without an env file.
  *
  * Usage:
  *   import api from '../lib/api';
- *   api.get('/webhook/get-invoices')
- *   api.post('/webhook/web-invoice-upload', formData)
- *
- * Full-URL overrides still work — if an env var like VITE_API_UPLOAD_URL
- * contains "https://…", axios ignores baseURL and uses that URL directly.
+ *   api.get('get-invoices')
+ *   api.post('web-invoice-upload', formData)
  */
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:5678';
+  import.meta.env.VITE_API_URL || 'http://localhost:5678/webhook/';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

@@ -24,13 +24,17 @@ React 18 + TypeScript + Tailwind + Axios + React Router + react-hot-toast + date
 
 2. Configure the n8n webhook base URL:
 
-   Edit `.env`:
+   Create `.env.development` (local) and `.env.production` (deploy):
    ```
-   VITE_N8N_WEBHOOK_URL=https://your-n8n.example.com/webhook
+   # .env.development
+   VITE_API_URL=https://n8n-local.magnetai.cc/webhook/
+
+   # .env.production
+   VITE_API_URL=https://n8n.magnetai.cc/webhook/
    ```
 
-   - POST /webhook/invoice-upload  (multipart/form-data with field "file")
-   - GET  /webhook/get-invoices     (returns array or { data: [...] })
+   - POST web-invoice-upload  (multipart/form-data with field "file")
+   - GET  get-invoices         (returns array or { data: [...] })
 
 3. Run locally:
    ```bash
@@ -54,7 +58,7 @@ React 18 + TypeScript + Tailwind + Axios + React Router + react-hot-toast + date
 1. `npm run build`
 2. Push to GitHub
 3. Import in Vercel
-4. Add environment variable `VITE_N8N_WEBHOOK_URL`
+4. Add environment variable `VITE_API_URL` in your deployment settings
 
 ## Folder Structure
 ```
