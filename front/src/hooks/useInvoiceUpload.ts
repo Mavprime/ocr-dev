@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { InvoiceData, JobStatus } from '../types/invoice';
-import api from '../lib/api';
+import api, { getUserId } from '../lib/api';
 
 // Webhook trigger path appended to VITE_API_URL (or its localhost fallback).
 const UPLOAD_PATH = 'a2bdee7f-0dcd-490b-891d-2a5d182ebabc';
@@ -99,6 +99,7 @@ export const useInvoiceUpload = (): UseInvoiceUploadReturn => {
 
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('user_id', getUserId());
 
     const controller = new AbortController();
     abortRef.current = controller;
