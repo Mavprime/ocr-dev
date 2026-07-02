@@ -115,7 +115,7 @@ const faqs = [
   },
   {
     q: 'How much does it cost?',
-    a: 'Ledger is free during the early-access period. Paid plans will be announced well in advance — and early users get a permanent discount.',
+    a: 'Addis Invoice is free during the early-access period. Paid plans will be announced well in advance — and early users get a permanent discount.',
   },
   {
     q: 'How do I get started?',
@@ -176,7 +176,7 @@ const ChatMockup: React.FC = () => (
       <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-white text-xs font-bold">
         L
       </div>
-      <div className="text-white text-sm font-semibold">Ledger Bot</div>
+      <div className="text-white text-sm font-semibold">Addis Invoice Bot</div>
     </div>
     {/* User message */}
     <div className="flex justify-end mb-2">
@@ -215,13 +215,13 @@ const DashboardMockup: React.FC = () => (
         <span className="w-3 h-3 rounded-full bg-green-400" />
       </div>
       <div className="flex-1 mx-4 bg-white rounded-md px-3 py-1 text-xs text-neutral-500 text-center">
-        app.ledger.et/dashboard
+        app.addisinvoice.com/dashboard
       </div>
     </div>
     <div className="flex">
       {/* Sidebar */}
       <div className="hidden sm:block w-44 bg-neutral-900 p-4 space-y-4 shrink-0">
-        <div className="text-white font-bold text-sm mb-6">Ledger</div>
+        <div className="text-white font-bold text-sm mb-6">Addis Invoice</div>
         <div className="bg-primary/20 text-primary text-xs font-semibold px-3 py-1.5 rounded">📊 Dashboard</div>
         <div className="text-neutral-400 text-xs px-3 py-1.5">👥 Clients</div>
         <div className="text-neutral-400 text-xs px-3 py-1.5">📨 Telegram</div>
@@ -306,7 +306,7 @@ const Home: React.FC = () => {
           </div>
           <p className="text-lg md:text-xl text-neutral-600 max-w-2xl mx-auto mb-8">
             Ethiopian accountants spend <strong>60–70% of their week</strong> on receipt data entry.
-            Ledger captures, extracts, and organizes them automatically — in Amharic and English,
+            Addis Invoice captures, extracts, and organizes them automatically — in Amharic and English,
             on the Ethiopian calendar.
           </p>
 
@@ -327,7 +327,7 @@ const Home: React.FC = () => {
               0988 817 281
             </a>
             <a
-              href="https://t.me/ledgerethiopia"
+              href="https://t.me/addisinvoice"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-neutral-700 hover:text-primary font-medium transition-colors"
@@ -478,7 +478,7 @@ const Home: React.FC = () => {
                   intake queue automatically, matched by TIN.
                 </p>
                 <a
-                  href="https://t.me/ledgerethiopia"
+                  href="https://t.me/addisinvoice"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 bg-[#0088cc] text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-[#0077b5] transition-colors"
@@ -566,14 +566,14 @@ const Home: React.FC = () => {
               {
                 icon: FaTelegramPlane,
                 label: 'Message on Telegram',
-                detail: '@ledgerethiopia',
-                href: 'https://t.me/ledgerethiopia',
+                detail: '@addisinvoice',
+                href: 'https://t.me/addisinvoice',
               },
               {
                 icon: FaEnvelope,
                 label: 'Email',
-                detail: 'hello@ledger.et',
-                href: 'mailto:hello@ledger.et',
+                detail: 'hello@addisinvoice.com',
+                href: 'mailto:hello@addisinvoice.com',
               },
             ].map(({ icon: Icon, label, detail, href }) => (
               <a

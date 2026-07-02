@@ -26,7 +26,7 @@ const App: React.FC = () => {
         </Routes>
       </main>
 
-      {/* Footer — Ledger.et style */}
+      {/* Footer */}
       <footer className="bg-neutral-900 text-neutral-400 pt-16 pb-8">
         <div className="max-w-6xl mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
@@ -36,7 +36,7 @@ const App: React.FC = () => {
                 <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center">
                   <span className="text-white font-bold text-lg">L</span>
                 </div>
-                <span className="text-white font-semibold text-lg">Ledger</span>
+                <span className="text-white font-semibold text-lg">Addis Invoice</span>
               </div>
               <p className="text-sm max-w-xs leading-relaxed">
                 Smart accounting for Ethiopia. Capture, organize, and verify receipts —
@@ -77,11 +77,11 @@ const App: React.FC = () => {
           {/* Bottom bar */}
           <div className="border-t border-neutral-800 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2 text-sm">
-              <span>© 2026 Ledger. Built in Ethiopia.</span>
+              <span>© 2026 Addis Invoice. Built in Ethiopia.</span>
             </div>
             <div className="flex items-center gap-4">
               <a
-                href="https://t.me/ledgerethiopia"
+                href="https://t.me/addisinvoice"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-9 h-9 rounded-full border border-neutral-700 flex items-center justify-center hover:border-primary hover:text-primary transition-colors"

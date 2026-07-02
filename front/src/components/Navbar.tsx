@@ -40,7 +40,7 @@ const Navbar: React.FC = () => {
               <span className="text-white font-bold text-lg">L</span>
             </div>
             <div className="hidden sm:block">
-              <div className="font-semibold text-lg text-neutral-900 leading-tight">Ledger</div>
+              <div className="font-semibold text-lg text-neutral-900 leading-tight">Addis Invoice</div>
               <div className="text-[10px] text-neutral-500 -mt-0.5">Smart OCR for Ethiopia</div>
             </div>
           </Link>
