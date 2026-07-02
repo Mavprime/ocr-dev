@@ -101,7 +101,8 @@
             "Vendor": "={{ $json.output.vendor_name }}",
             "Total Amount": "={{ $json.output.grand_total }}",
             "Summary": "={{ $json.output.items_summary }}",
-            "Source": "={{ $json.message ? 'telegram' : 'web' }}"
+            "Source": "={{ $json.message ? 'telegram' : 'web' }}",
+            "User_ID": "={{ $('Webhook').item.json.body.user_id || ('telegram_user_' + ($('Telegram Trigger').item.json.message?.from?.id || 'unknown')) }}"
           },
           "matchingColumns": [
             "Date"
@@ -155,6 +156,16 @@
               "display": true,
               "type": "string",
               "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "User_ID",
+              "displayName": "User_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
               "removed": false
             }
           ],
@@ -926,7 +937,7 @@
       ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",

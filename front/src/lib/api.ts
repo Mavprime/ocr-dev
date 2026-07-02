@@ -19,4 +19,26 @@ const api = axios.create({
   timeout: 30000,
 });
 
+/* ──────────────────────────────────────────────────────────────────────────────
+   Anonymous User ID
+   Generates a persistent random identifier so every browser gets its own
+   "tenant" in the master Google Sheet without needing a login.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+const USER_ID_KEY = 'addis_invoice_user_id';
+
+/**
+ * Returns the persistent anonymous user ID for this browser.
+ * Creates one (format: `anon_<random>`) on first visit and stores it in
+ * localStorage so it survives refreshes and tab closes.
+ */
+export const getUserId = (): string => {
+  let id = localStorage.getItem(USER_ID_KEY);
+  if (!id) {
+    id = 'anon_' + Math.random().toString(36).substring(2, 12) + Date.now().toString(36);
+    localStorage.setItem(USER_ID_KEY, id);
+  }
+  return id;
+};
+
 export default api;

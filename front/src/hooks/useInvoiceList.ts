@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { Invoice } from '../types/invoice';
-import api from '../lib/api';
+import api, { getUserId } from '../lib/api';
 
 // Webhook trigger path appended to VITE_API_URL (or its localhost fallback).
 const INVOICES_PATH = '8d8ca621-7124-4b26-91ef-e7febd5e4341';
@@ -61,7 +61,7 @@ export const useInvoiceList = (): UseInvoiceListReturn => {
     setError(null);
 
     try {
-      const response = await api.get(INVOICES_PATH, { timeout: 20000 });
+      const response = await api.get(`${INVOICES_PATH}?userId=${getUserId()}`, { timeout: 20000 });
 
       // n8n may return a bare array, { data: [...] }, or — when the sheet has a
       // single row — a bare object. Normalize all of these to an array.

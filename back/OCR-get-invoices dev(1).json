@@ -55,7 +55,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Each sheet row comes in as one item. Newest rows are appended at the bottom,\n// so take the last 15 and reverse them so the newest is first.\nconst rows = $input.all().map(i => i.json);\nconst recent = rows.slice(-15).reverse();\n\nconst toNumber = (v) => {\n  if (v === null || v === undefined) return 0;\n  const n = parseFloat(String(v).replace(/[^0-9.\\-]/g, ''));\n  return isNaN(n) ? 0 : n;\n};\n\nreturn recent.map((r, idx) => ({\n  json: {\n    id: `${r.Date || ''}-${r.Vendor || ''}-${idx}`,\n    vendor: r.Vendor || 'Unknown',\n    date: r.Date || '',\n    grand_total: toNumber(r['Total Amount']),\n    items_summary: r.Summary || '',\n    items: [],\n    source: r.Source || 'web',\n    created_at: r.Date || ''\n  }\n}));"
+        "jsCode": "// Multi-tenant: only return rows belonging to the requesting user.\n// The webhook receives ?userId=anon_... and we filter the full sheet before\n// slicing to the 15 most recent.\nconst userId = $('Webhook get-invoices').item.json.query.userId || '';\n\nconst rows = $input.all().map(i => i.json);\n\n// Filter by User_ID if a userId was provided (web client).\n// Users without a userId query param will see all rows (backwards compat).\nconst userRows = userId\n  ? rows.filter(r => (r.User_ID || '') === userId)\n  : rows;\n\n// Newest rows are appended at the bottom — take last 15 and reverse.\nconst recent = userRows.slice(-15).reverse();\n\nconst toNumber = (v) => {\n  if (v === null || v === undefined) return 0;\n  const n = parseFloat(String(v).replace(/[^0-9.\\-]/g, ''));\n  return isNaN(n) ? 0 : n;\n};\n\nreturn recent.map((r, idx) => ({\n  json: {\n    id: `${r.Date || ''}-${r.Vendor || ''}-${idx}`,\n    vendor: r.Vendor || 'Unknown',\n    date: r.Date || '',\n    grand_total: toNumber(r['Total Amount']),\n    items_summary: r.Summary || '',\n    items: [],\n    source: r.Source || 'web',\n    created_at: r.Date || ''\n  }\n}));"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -92,7 +92,7 @@
       ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
