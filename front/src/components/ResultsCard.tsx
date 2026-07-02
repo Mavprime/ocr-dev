@@ -129,7 +129,7 @@ const ResultsCard: React.FC<ResultsCardProps> = ({
         {onViewInvoice && (
           <button
             onClick={onViewInvoice}
-            className="flex-1 min-w-[140px] flex items-center justify-center gap-2 bg-primary hover:bg-blue-600 text-white px-6 py-3 rounded-2xl font-semibold transition-colors"
+            className="flex-1 min-w-[140px] flex items-center justify-center gap-2 bg-primary hover:bg-cyan-600 text-white px-6 py-3 rounded-2xl font-semibold transition-colors"
           >
             <FaEye className="w-4 h-4" />
             View Invoice
