@@ -1,7 +1,8 @@
 {
   "name": "Addis Invoice OCR",
-  "version": "3.0",
-  "description": "AI-powered invoice processing pipeline for small businesses in Addis Ababa, Ethiopia. Users upload invoices (PDF/JPG/PNG) via a React web dashboard or a Telegram bot. n8n orchestrates Google Document AI for OCR text extraction and DeepSeek for structured data parsing. Extracted data (vendor, date, line items, grand total) is written to Google Sheets and surfaced in a searchable, filterable invoice history with detail modals and PDF export.",
+  "version": "3.3",
+  "description": "AI-powered invoice processing pipeline for small businesses in Addis Ababa, Ethiopia. Users submit invoices (PDF/JPG/PNG) via a React web dashboard, Telegram bot, or WhatsApp. n8n orchestrates Google Document AI for OCR text extraction and DeepSeek for structured data parsing. Extracted data (vendor, date, line items, grand total) is written to Google Sheets and surfaced in a searchable, filterable invoice history with detail modals and PDF export.",
+
   "architecture": {
     "frontend": {
       "name": "addis-invoice-dashboard",
@@ -17,30 +18,40 @@
         "jspdf + jspdf-autotable"
       ],
       "pages": {
-        "/": "Landing page",
+        "/": "Landing page with hero, feature highlights, how-it-works steps, and CTA sections styled in cyan theme",
         "/upload": "Drag-and-drop invoice upload with progress bar, processing spinner, and result card with detail modal",
         "/invoices": "Searchable, filterable, sortable invoice history table with detail modal and PDF download"
       },
       "components": [
-        "UploadZone — drag-and-drop file upload area with validation",
+        "Navbar — top navigation with app branding and page links",
+        "UploadZone — drag-and-drop file upload area with type/size validation",
         "ProcessingSpinner — animated spinner shown during OCR+AI extraction",
         "ResultsCard — extracted invoice preview with line items table and action buttons (Save, Download, View Invoice, Upload Another)",
         "FilterBar — search, date range, and clear filters for invoice list",
-        "InvoiceTable — paginated, sortable table with eye/view, download, and delete actions",
+        "InvoiceTable — paginated, sortable table with view, download, and delete actions",
         "DetailsModal — full-screen overlay showing vendor, date, total, source, line items, items summary, and PDF export"
       ],
       "hooks": {
-        "useInvoiceUpload": "Manages upload lifecycle — idle → uploading → processing → uploaded/completed/failed. Posts multipart FormData to n8n webhook. Handles progress, timeout (150s), CORS, and React StrictMode remount safety.",
+        "useInvoiceUpload": "Manages upload lifecycle — idle → uploading → processing → uploaded/completed/failed. Posts multipart FormData to n8n webhook via centralized API client. Handles progress, timeout (150s), CORS, and React StrictMode remount safety.",
         "useInvoiceList": "Fetches invoice history from n8n get-invoices webhook. Provides search, date filtering, sorting, pagination, and delete (local hide)."
+      },
+      "lib": {
+        "api": "Centralized Axios instance pointing to VITE_API_URL. Appends webhook paths automatically. Supports dev/prod environment switching via .env files."
+      },
+      "environments": {
+        "development": "VITE_API_URL → .env.development (local n8n or tunneled instance)",
+        "production": "VITE_API_URL → .env.production (production n8n instance)",
+        "fallback": "http://localhost:5678/webhook/"
       }
     },
+
     "backend": {
       "platform": "n8n workflow automation",
       "instance": "https://n8n.magnetai.cc (port 5678 locally)",
       "workflows": {
-        "OCR-3.0-web": {
-          "file": "OCR-3.0-web.json",
-          "description": "Main invoice processing workflow with dual entry points (Web + Telegram). Uses asynchronous Respond to Webhook pattern for immediate user feedback.",
+        "OCR-3.3-web": {
+          "file": "OCR-3.0-web dev.json",
+          "description": "Main invoice processing workflow with three entry points: Web upload, Telegram bot, and WhatsApp.",
           "web_path": {
             "trigger": "POST /webhook/web-invoice-upload (multipart/form-data)",
             "flow": [
@@ -51,8 +62,9 @@
               "5. Switch PDF/Image — routes to appropriate HTTP Request node",
               "6. AI Agent + DeepSeek Chat Model + Structured Output Parser — parses vendor, date, items, grand_total from extracted text",
               "7. Edit Fields — normalizes and formats extracted data",
-              "8. Append or update row in sheet — writes to Google Sheets",
-              "9. Switch → Send Telegram notification on success"
+              "8. If valid invoice → Append or update row in Google Sheets",
+              "9. If not valid → Send rejection message (Telegram only)",
+              "10. Switch → Send Telegram/WhatsApp notification on success"
             ]
           },
           "telegram_path": {
@@ -61,44 +73,87 @@
               "1. Telegram Trigger — listens for file messages",
               "2. Get a file — downloads file from Telegram",
               "3. Extract from File — Google Document AI OCR",
-              "4. Switch PDF/Image → HTTP Request",
+              "4. Switch PDF/Image → HTTP Request to Document AI",
               "5. Converges with web path at AI Agent for parsing and Sheets storage"
             ]
           },
+          "whatsapp_path": {
+            "trigger": "WhatsApp channel receives invoice file",
+            "flow": "WhatsApp integration added in v3.3 — receives invoice files via WhatsApp and feeds into the shared OCR+AI pipeline"
+          },
           "ai_models": {
-            "ocr": "Google Document AI (via n8n Extract from File node)",
-            "parsing": "DeepSeek Chat Model (via n8n LangChain nodes with Structured Output Parser)"
+            "ocr": "Google Document AI (australia-southeast1 region, processor for PDF/image OCR)",
+            "parsing": "DeepSeek Chat Model — deepseek-v4-flash (via n8n LangChain nodes with Structured Output Parser)"
+          },
+          "structured_output_schema": {
+            "is_invoice": "boolean — true if valid invoice/receipt, false for unrelated content",
+            "date": "string — invoice date (empty if not an invoice)",
+            "vendor_name": "string — standardized vendor name, Amharic translated to English (empty if not an invoice)",
+            "grand_total": "number — final total amount due (0 if not an invoice)",
+            "items_summary": "string — concise text summary of purchased items (empty if not an invoice)"
           },
           "cors": {
             "webhook_trigger": "allowedOrigins: *",
             "respond_node": "Access-Control-Allow-Origin: *"
           },
           "response_format": {
-            "immediate_ack": { "status": "success", "message": "File uploaded successfully! Your invoice is being processed in the background." },
+            "immediate_ack": {
+              "status": "success",
+              "message": "File uploaded successfully! Your invoice is being processed in the background."
+            },
             "async_result": "Written to Google Sheets, surfaced via get-invoices webhook"
           }
         },
         "get-invoices": {
-          "file": "get-invoices-workflow.json",
-          "description": "GET webhook that returns the 15 most recent invoice rows from Google Sheets as JSON array."
+          "file": "OCR-get-invoices dev.json",
+          "description": "GET webhook that reads all rows from Google Sheets, takes the 15 most recent, reverses them (newest first), and returns as a JSON array with normalized field names.",
+          "endpoint": "GET /webhook/get-invoices",
+          "flow": [
+            "1. Webhook receives GET request",
+            "2. Read rows from Google Sheets",
+            "3. Code node — slices last 15 rows, reverses, normalizes fields (vendor, date, grand_total, items_summary, source)",
+            "4. Returns JSON array to client"
+          ],
+          "cors": "allowedOrigins: *"
         }
       },
-      "data_store": "Google Sheets (append/update rows via n8n Google Sheets node)"
+      "data_store": "Google Sheets — append/update rows via n8n Google Sheets node (Sheet: OCR-dev → Sheet1)"
     }
   },
+
   "data_flow": {
-    "upload": "User drops file → Frontend POST to n8n webhook → n8n acknowledges immediately → Background: Document AI OCR → DeepSeek AI parsing → Google Sheets",
-    "history": "Frontend GET /get-invoices → n8n reads Google Sheets → Returns last 15 rows → Frontend displays in sortable/filterable table",
-    "detail_view": "User clicks View Invoice → Frontend opens DetailsModal overlay with full invoice data (vendor, date, line items, total, summary) and PDF download"
+    "upload": "User submits file via Web/Telegram/WhatsApp → n8n acknowledges immediately → Background: Document AI OCR → DeepSeek AI parsing → Google Sheets → Telegram/WhatsApp notification",
+    "history": "Frontend GET /get-invoices → n8n reads Google Sheets → Returns last 15 rows (newest first) → Frontend displays in sortable/filterable table",
+    "detail_view": "User clicks View Invoice → Frontend opens DetailsModal overlay with full invoice data and PDF download"
   },
+
+  "channels": {
+    "web": "React dashboard with drag-and-drop upload at /upload",
+    "telegram": "Telegram bot accepting invoice files and returning extracted summary",
+    "whatsapp": "WhatsApp channel for invoice submission (added in v3.3)"
+  },
+
   "key_fixes_applied": [
     "Removed manual Content-Type: multipart/form-data header — let axios set boundary automatically",
     "Fixed React StrictMode double-mount bug — mountedRef not reset to true on remount, silently dropping all upload state callbacks",
-    "Added View Invoice button to upload result screen — fetches latest invoice from API and opens DetailsModal with full detail view and PDF download"
+    "Added View Invoice button to upload result screen — fetches latest invoice from API and opens DetailsModal",
+    "Centralized API configuration in lib/api.ts with VITE_API_URL env var and localhost fallback",
+    "Separated dev/prod environments with single VITE_API_URL in .env files",
+    "Redesigned homepage with landing page sections (hero, features, how-it-works, CTA) and cyan color theme",
+    "Rebranded all Ledger references to Addis Invoice"
   ],
+
   "target_users": "Small businesses in Addis Ababa, Ethiopia. Supports Amharic and English invoice formats.",
   "currency": "ETB (Ethiopian Birr)",
   "supported_formats": ["PDF", "JPG", "JPEG", "PNG"],
   "max_file_size": "10 MB",
-  "processing_timeout": "150 seconds"
+  "processing_timeout": "150 seconds",
+
+  "deployment": {
+    "frontend": "Vercel (build: npm run build, output: dist/)",
+    "backend": "n8n cloud instance at n8n.magnetai.cc",
+    "repository": "git@github.com:Mavprime/OCR-Dev.git (main branch)"
+  },
+
+  "tags": ["ocr", "invoice-processing", "n8n", "react", "typescript", "tailwind", "google-document-ai", "deepseek", "telegram-bot", "whatsapp", "ethiopia", "small-business"]
 }
