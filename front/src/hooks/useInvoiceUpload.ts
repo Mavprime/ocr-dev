@@ -5,7 +5,7 @@ import { InvoiceData, JobStatus } from '../types/invoice';
 import api from '../lib/api';
 
 // Webhook trigger path appended to VITE_API_URL (or its localhost fallback).
-const UPLOAD_PATH = 'web-invoice-upload';
+const UPLOAD_PATH = 'a2bdee7f-0dcd-490b-891d-2a5d182ebabc';
 
 /**
  * The n8n web flow is synchronous: it receives the file, runs Google Document AI

@@ -1,11 +1,11 @@
 {
-  "name": "OCR-get-invoices",
+  "name": "OCR-get-invoices dev",
   "nodes": [
     {
       "parameters": {
-        "httpMethod": "GET",
-        "path": "get-invoices",
+        "path": "8d8ca621-7124-4b26-91ef-e7febd5e4341",
         "responseMode": "lastNode",
+        "responseData": "allEntries",
         "options": {
           "allowedOrigins": "*"
         }
@@ -13,38 +13,38 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -320,
+        0,
         0
       ],
-      "id": "a1111111-1111-4111-8111-111111111111",
+      "id": "2e0c3eb3-3854-4a0e-bae4-62c29e831ca7",
       "name": "Webhook get-invoices",
-      "webhookId": "a1111111-1111-4111-8111-111111111111"
+      "webhookId": "8d8ca621-7124-4b26-91ef-e7febd5e4341"
     },
     {
       "parameters": {
         "documentId": {
           "__rl": true,
-          "value": "1pDEQUN5pwn-26HE06ZfiYB2W6cAk590-PdwwdZlkLRA",
+          "value": "1XM1WgFbVKHvGsrzAwrCqbOi-O4ZqnIbCqO0sK7zlgSM",
           "mode": "list",
-          "cachedResultName": "OCR",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1pDEQUN5pwn-26HE06ZfiYB2W6cAk590-PdwwdZlkLRA/edit?usp=drivesdk"
+          "cachedResultName": "OCR-dev",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1XM1WgFbVKHvGsrzAwrCqbOi-O4ZqnIbCqO0sK7zlgSM/edit?usp=drivesdk"
         },
         "sheetName": {
           "__rl": true,
           "value": "gid=0",
           "mode": "list",
           "cachedResultName": "Sheet1",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1pDEQUN5pwn-26HE06ZfiYB2W6cAk590-PdwwdZlkLRA/edit#gid=0"
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1XM1WgFbVKHvGsrzAwrCqbOi-O4ZqnIbCqO0sK7zlgSM/edit#gid=0"
         },
         "options": {}
       },
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        -96,
+        224,
         0
       ],
-      "id": "b2222222-2222-4222-8222-222222222222",
+      "id": "a117fb61-794d-4a26-b06b-d8ef6b72e8ae",
       "name": "Read rows from sheet",
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -60,10 +60,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        128,
+        448,
         0
       ],
-      "id": "c3333333-3333-4333-8333-333333333333",
+      "id": "7a5f4d6c-fb72-4e98-b492-da075dc589a5",
       "name": "Format last 15"
     }
   ],
@@ -92,12 +92,24 @@
       ]
     }
   },
-  "active": true,
+  "active": false,
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
   },
+  "versionId": "879b21fe-be57-4591-bc8f-a07d3f12d8d6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "dac9761f8be1e70c705e3a80868a4342418a292891906897a7363647af8ab4b7"
+  },
+  "nodeGroups": [],
+  "id": "GtBQIlArKSXhqlFF",
   "tags": [
     {
+      "updatedAt": "2026-06-26T06:40:19.705Z",
+      "createdAt": "2026-06-26T06:40:19.705Z",
+      "id": "e95wuTKnlaHNfnlQ",
       "name": "Web-support"
     }
   ]

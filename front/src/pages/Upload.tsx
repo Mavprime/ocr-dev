@@ -11,7 +11,7 @@ import 'jspdf-autotable';
 import toast from 'react-hot-toast';
 
 // Webhook trigger path appended to VITE_API_URL (or its localhost fallback).
-const INVOICES_PATH = 'get-invoices';
+const INVOICES_PATH = '8d8ca621-7124-4b26-91ef-e7febd5e4341';
 
 const MAX_HISTORY = 15;
 
