@@ -3,9 +3,13 @@
 @tailwind utilities;
 
 :root {
-  --primary: #3B82F6;
+  --primary: #06B6D4;
   --success: #10B981;
   --error: #EF4444;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
@@ -19,12 +23,12 @@ body {
 }
 
 .upload-zone.dragover {
-  border-color: #3B82F6;
-  background-color: #EFF6FF;
+  border-color: #06B6D4;
+  background-color: #ECFEFF;
 }
 
 .upload-zone:hover {
-  border-color: #3B82F6;
+  border-color: #06B6D4;
 }
 
 /* Card and table styles */

@@ -151,7 +151,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ invoice, onClose }) => {
         <div className="sticky bottom-0 bg-white px-6 py-4 border-t flex gap-3">
           <button 
             onClick={downloadPDF}
-            className="flex-1 flex items-center justify-center gap-2 bg-primary text-white py-3 rounded-2xl font-semibold hover:bg-blue-600"
+            className="flex-1 flex items-center justify-center gap-2 bg-primary text-white py-3 rounded-2xl font-semibold hover:bg-cyan-600"
           >
             <FaDownload /> Download PDF
           </button>

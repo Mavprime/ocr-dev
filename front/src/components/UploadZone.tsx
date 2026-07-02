@@ -81,7 +81,7 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onFileSelect, disabled = false 
             <FaFilePdf className="text-red-500" /> PDF
           </div>
           <div className="flex items-center gap-1.5">
-            <FaImage className="text-blue-500" /> JPG / PNG
+            <FaImage className="text-cyan-500" /> JPG / PNG
           </div>
         </div>
 
