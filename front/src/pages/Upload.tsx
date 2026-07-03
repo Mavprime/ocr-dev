@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useInvoiceUpload } from '../hooks/useInvoiceUpload';
 import { useInvoiceList } from '../hooks/useInvoiceList';
 import UploadZone from '../components/UploadZone';
@@ -10,6 +10,17 @@ import api from '../lib/api';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import toast from 'react-hot-toast';
+import {
+  ArrowRight,
+  BadgeCheck,
+  Crown,
+  LoaderCircle,
+  ScanSearch,
+  ShieldCheck,
+  Sparkles,
+} from 'lucide-react';
+
+import { useLanguage } from '../components/LanguageProvider';
 
 // Webhook trigger path appended to VITE_API_URL (or its localhost fallback).
 const INVOICES_PATH = 'invoices-history';
@@ -64,10 +75,42 @@ const fetchLatestInvoice = async (): Promise<Invoice | null> => {
 const Upload: React.FC = () => {
   const { uploadFile, status, progress, data, error, reset } = useInvoiceUpload();
   const { totalCount, isLoading: isHistoryLoading, error: historyError, refetch: refetchHistory } = useInvoiceList();
+  const { t, textClass } = useLanguage();
   const navigate = useNavigate();
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [modalInvoice, setModalInvoice] = useState<Invoice | null>(null);
   const [isFetchingInvoice, setIsFetchingInvoice] = useState(false);
+
+  const checklist = useMemo(
+    () => [
+      {
+        key: 'upload',
+        label: t('upload.step.upload'),
+        sublabel: t('upload.step.uploadSub'),
+        state: status === 'idle' ? 'idle' : status === 'uploading' ? 'active' : 'done',
+      },
+      {
+        key: 'layout',
+        label: t('upload.step.read'),
+        sublabel: status === 'processing' ? t('upload.processingLayout') : t('upload.step.readSub'),
+        state: status === 'processing' ? 'active' : status === 'uploaded' || status === 'completed' ? 'done' : 'idle',
+      },
+      {
+        key: 'tax',
+        label: t('upload.step.prepare'),
+        sublabel: t('upload.step.prepareSub'),
+        state: status === 'uploaded' ? 'active' : status === 'completed' ? 'done' : 'idle',
+      },
+    ],
+    [status, t],
+  );
+
+  const progressLabel =
+    status === 'uploading'
+      ? `${progress}%`
+      : status === 'processing'
+        ? t('upload.progress.reading')
+        : t('upload.progress.finalizing');
 
   /** Reset upload state AND refresh the invoice count for the limit guard. */
   const handleReset = () => {
@@ -123,127 +166,168 @@ const Upload: React.FC = () => {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-neutral-900">Upload Your Invoice</h1>
-        <p className="text-neutral-600 mt-1">Quick, accurate invoice processing</p>
+      <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div>
+          <h1 className={`text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 ${textClass}`}>{t('upload.title')}</h1>
+          <p className={`mt-1 text-sm text-slate-500 dark:text-slate-400 ${textClass}`}>{t('upload.subtitle')}</p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 text-sm">
+          <div className="ui-surface rounded-xl px-3 py-2.5">
+            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+              <ScanSearch className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-300" />
+              {t('upload.freeTrial')}
+            </div>
+            <div className="mt-0.5 font-semibold text-slate-900 dark:text-slate-100">{t('upload.usedCount', { count: totalCount, max: 3 })}</div>
+          </div>
+          <div className="ui-surface rounded-xl px-3 py-2.5">
+            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+              <ShieldCheck className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-300" />
+              {t('upload.formats')}
+            </div>
+            <div className="mt-0.5 font-semibold text-slate-900 dark:text-slate-100">PDF, JPG, PNG</div>
+          </div>
+        </div>
       </div>
 
-      {/* Initial upload zone — with 3-upload limit guard */}
       {status === 'idle' && (
         <>
           {isHistoryLoading ? (
             <div>
               <UploadZone onFileSelect={handleFileSelect} disabled={false} />
-              <p className="text-center text-xs text-neutral-400 mt-3">Checking upload limit…</p>
+              <p className={`mt-3 text-center text-xs text-slate-500 dark:text-slate-400 ${textClass}`}>{t('upload.checkingLimit')}</p>
             </div>
           ) : historyError ? (
             <div>
               <UploadZone onFileSelect={handleFileSelect} disabled={false} />
-              <p className="text-center text-xs text-amber-500 mt-3">
-                Could not check upload limit. Uploads may be restricted.
+              <p className={`mt-3 text-center text-xs text-amber-600 dark:text-amber-300 ${textClass}`}>
+                {t('upload.limitCheckFailed')}
               </p>
             </div>
           ) : totalCount >= 3 ? (
             <div>
               <UploadZone onFileSelect={handleFileSelect} disabled={true} />
-              <div className="mt-4 bg-amber-50 border border-amber-200 rounded-2xl p-5 text-center">
-                <p className="font-semibold text-amber-800 text-lg">
-                  Upload Limit Reached (3/3) — Upgrade to Premium
-                </p>
-                <p className="text-sm text-amber-600 mt-1 mb-4">
-                  You have used all 3 free uploads. Upgrade to continue processing invoices.
-                </p>
-                <a
-                  href="https://wa.me/251978407848"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-cyan-600 transition-colors"
-                >
-                  Upgrade via WhatsApp
-                </a>
+              <div className="ui-surface mt-3 rounded-2xl overflow-hidden">
+                <div className="bg-[radial-gradient(circle_at_top_right,rgba(34,211,238,0.18),transparent_42%)] px-5 py-5">
+                  <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-700 dark:text-cyan-300">
+                    <Crown className="h-3.5 w-3.5" />
+                    {t('upload.premium')}
+                  </div>
+                  <p className={`text-lg font-semibold text-slate-900 dark:text-slate-100 ${textClass}`}>
+                    {t('upload.freeUploadsUsed')}
+                  </p>
+                  <p className={`mb-4 mt-2 text-sm text-slate-600 dark:text-slate-300 ${textClass}`}>
+                    {t('upload.limitDesc')}
+                  </p>
+                  <a
+                    href="https://wa.me/251978407848"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-2xl bg-cyan-500 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
+                  >
+                    {t('upload.upgradeWhatsapp')}
+                    <ArrowRight className="h-4 w-4" />
+                  </a>
+                </div>
+                <div className="border-t border-slate-200/70 bg-white/60 px-6 py-4 text-left text-sm text-slate-500 dark:border-slate-800/80 dark:bg-slate-950/40 dark:text-slate-400">
+                  {t('upload.upgradeNote')}
+                </div>
               </div>
             </div>
           ) : (
             <div>
               <UploadZone onFileSelect={handleFileSelect} disabled={false} />
-              <p className="text-center text-xs text-neutral-400 mt-3">
-                {totalCount} of 3 free uploads used
+              <p className="mt-3 text-center text-xs text-slate-500 dark:text-slate-400">
+                {t('upload.freeUsed', { count: totalCount, max: 3 })}
               </p>
             </div>
           )}
         </>
       )}
 
-      {/* Upload progress (sending bytes) */}
-      {status === 'uploading' && (
-        <div className="mt-6 bg-white rounded-2xl p-8 border border-neutral-200">
-          <div className="flex justify-between text-sm mb-2">
-            <span className="text-neutral-700">Uploading file...</span>
-            <span className="font-mono text-primary">{progress}%</span>
+      {(status === 'uploading' || status === 'processing' || status === 'uploaded') && (
+        <div className="ui-surface mt-5 rounded-2xl p-5">
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+                {t('upload.processing')}
+              </div>
+              <h3 className={`mt-1 text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100 ${textClass}`}>
+                {status === 'uploaded' ? t('upload.almostReady') : t('upload.working')}
+              </h3>
+            </div>
+            <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-2.5 py-1.5 text-sm font-semibold text-cyan-700 dark:text-cyan-300">
+              {progressLabel}
+            </div>
           </div>
-          <div className="h-2.5 bg-neutral-100 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-primary progress-bar rounded-full transition-all"
-              style={{ width: `${progress}%` }}
-            />
+
+          {status === 'uploading' && (
+            <div className="mb-5 h-2.5 overflow-hidden rounded-full bg-slate-200/70 dark:bg-slate-800/80">
+              <div
+                className="progress-bar h-full rounded-full bg-gradient-to-r from-cyan-500 via-cyan-400 to-cyan-300"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          )}
+
+          <div className="space-y-3">
+            {checklist.map((step) => (
+              <div
+                key={step.key}
+                className={`rounded-2xl border px-4 py-3 transition-all ${
+                  step.state === 'done'
+                    ? 'border-cyan-500/18 bg-cyan-500/8'
+                    : step.state === 'active'
+                    ? 'border-cyan-500/28 bg-cyan-500/10'
+                    : 'border-slate-200/70 bg-white/60 dark:border-slate-800/80 dark:bg-slate-950/40'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-xl bg-white/70 text-cyan-600 dark:bg-slate-950/45 dark:text-cyan-300">
+                    {step.state === 'done' ? (
+                      <BadgeCheck className="h-4 w-4" />
+                    ) : step.state === 'active' ? (
+                      <LoaderCircle className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-4 w-4 opacity-60" />
+                    )}
+                  </div>
+                  <div>
+                    <div className="font-medium text-slate-900 dark:text-slate-100">{step.label}</div>
+                    <div className="text-sm text-slate-500 dark:text-slate-400">{step.sublabel}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-          <p className="mt-3 text-sm text-neutral-500 text-center">Sending your invoice...</p>
+
+          {status === 'uploaded' && (
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button
+                onClick={handleViewLatestInvoice}
+                disabled={isFetchingInvoice}
+                className="inline-flex items-center gap-2 rounded-2xl bg-cyan-500 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400 disabled:opacity-70"
+              >
+                {isFetchingInvoice ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <BadgeCheck className="h-4 w-4" />}
+                {isFetchingInvoice ? t('upload.loading') : t('upload.viewInvoice')}
+              </button>
+              <button
+                onClick={handleReset}
+                className="inline-flex items-center gap-2 rounded-2xl border border-slate-200/70 bg-white/80 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:text-cyan-600 dark:border-slate-800/80 dark:bg-slate-950/50 dark:text-slate-200 dark:hover:text-cyan-300"
+              >
+                {t('upload.another')}
+              </button>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Processing (n8n running OCR + AI) */}
-      {status === 'processing' && (
-        <div className="mt-6 bg-white rounded-2xl p-10 border border-neutral-200 text-center">
-          <div className="w-14 h-14 mx-auto mb-5 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-          <h3 className="text-xl font-semibold text-neutral-900 mb-1">
-            Reading your invoice…
-          </h3>
-          <p className="text-neutral-500">
-            Extracting vendor, date and totals with Document AI + DeepSeek. This usually takes a few seconds.
-          </p>
-        </div>
-      )}
-
-      {/* Uploaded — file received, processing in background (OCR-3.0) */}
-      {status === 'uploaded' && (
-        <div className="mt-6 bg-white rounded-2xl p-10 border border-green-200 text-center">
-          <div className="w-14 h-14 mx-auto mb-5 bg-green-100 rounded-full flex items-center justify-center">
-            <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <h3 className="text-xl font-semibold text-neutral-900 mb-1">
-            Upload Successful!
-          </h3>
-          <p className="text-neutral-500 mb-4">
-            Your invoice has been received and is being processed in the background.
-            It will appear in your invoice list shortly.
-          </p>
-          <div className="flex flex-wrap gap-3 justify-center">
-            <button
-              onClick={handleViewLatestInvoice}
-              disabled={isFetchingInvoice}
-              className="px-6 py-2.5 bg-primary hover:bg-cyan-600 disabled:opacity-70 text-white rounded-2xl font-semibold transition-colors"
-            >
-              {isFetchingInvoice ? 'Loading…' : 'View Invoice'}
-            </button>
-            <button
-              onClick={handleReset}
-              className="px-6 py-2.5 bg-white border border-neutral-300 hover:bg-neutral-50 text-neutral-700 rounded-2xl font-medium transition-colors"
-            >
-              Upload Another
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Completed — show the extracted result */}
       {status === 'completed' && data && (
         <div className="mt-6">
           <ResultsCard
             data={data}
             onSave={() => {
-              toast.success('Saved to your Google Sheet.', { icon: '🗂️' });
+              toast.success(t('upload.saved'), { icon: '🗂️' });
               navigate('/invoices');
             }}
             onUploadAnother={handleReset}
@@ -253,34 +337,31 @@ const Upload: React.FC = () => {
         </div>
       )}
 
-      {/* Detail modal — shown for completed extraction or fetched latest invoice */}
       <DetailsModal
         invoice={showDetailModal ? (modalInvoice || data || null) : null}
         onClose={() => { setShowDetailModal(false); setModalInvoice(null); }}
       />
 
-      {/* Error state */}
       {status === 'failed' && error && (
-        <div className="mt-6 bg-red-50 border border-red-200 rounded-2xl p-6">
+        <div className="ui-surface mt-5 rounded-2xl p-5">
           <div className="flex items-start gap-3">
-            <div className="text-error mt-0.5">⚠️</div>
+            <div className="mt-0.5 text-red-500 dark:text-red-300">⚠️</div>
             <div className="flex-1">
-              <p className="font-medium text-red-800">Upload failed</p>
-              <p className="text-red-700 mt-1 text-sm">{error}</p>
+              <p className={`font-medium text-slate-900 dark:text-slate-100 ${textClass}`}>{t('upload.failed')}</p>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{error}</p>
               <button
                 onClick={handleReset}
-                className="mt-3 text-sm px-4 py-1.5 rounded-xl bg-white border border-red-300 hover:bg-red-50 text-red-700 font-medium"
+                className="mt-3 rounded-2xl border border-slate-200/70 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 transition hover:text-cyan-600 dark:border-slate-800/80 dark:bg-slate-950/50 dark:text-slate-200 dark:hover:text-cyan-300"
               >
-                Try again
+                {t('upload.tryAgain')}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Help text */}
-      <div className="mt-8 text-center text-xs text-neutral-500">
-        Supports PDF, JPG and PNG • Up to 10MB • Powered by MagnetAI
+      <div className="mt-6 text-center text-xs text-slate-500 dark:text-slate-400">
+        {t('upload.footerFormats')}
       </div>
     </div>
   );

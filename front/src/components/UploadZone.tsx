@@ -1,5 +1,7 @@
 import React, { useCallback, useState } from 'react';
-import { FaCloudUploadAlt, FaFilePdf, FaImage } from 'react-icons/fa';
+import { FileImage, FileUp, FileText } from 'lucide-react';
+
+import { useLanguage } from './LanguageProvider';
 
 interface UploadZoneProps {
   onFileSelect: (file: File) => void;
@@ -8,19 +10,22 @@ interface UploadZoneProps {
 
 const UploadZone: React.FC<UploadZoneProps> = ({ onFileSelect, disabled = false }) => {
   const [isDragOver, setIsDragOver] = useState(false);
+  const { t, textClass } = useLanguage();
 
   const handleFile = (file: File) => {
     if (disabled) return;
     onFileSelect(file);
   };
 
-  const onDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    
-    const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
-  }, [disabled]);
+  const onDrop = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      setIsDragOver(false);
+      const file = e.dataTransfer.files[0];
+      if (file) handleFile(file);
+    },
+    [disabled],
+  );
 
   const onDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -36,7 +41,6 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onFileSelect, disabled = false 
     const file = e.target.files?.[0];
     if (file) {
       handleFile(file);
-      // Reset input so same file can be selected again
       e.target.value = '';
     }
   };
@@ -46,17 +50,24 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onFileSelect, disabled = false 
       onDrop={onDrop}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
-      className={`upload-zone rounded-3xl p-10 text-center cursor-pointer transition-all
-        ${isDragOver ? 'dragover' : ''} 
-        ${disabled ? 'opacity-60 pointer-events-none' : 'hover:border-primary'}
-        border-2 border-dashed border-neutral-300 bg-white`}
+      className={`upload-zone group relative overflow-hidden rounded-2xl p-8 text-center cursor-pointer border
+        ${isDragOver ? 'dragover scale-[1.01]' : ''}
+        ${disabled ? 'opacity-60 pointer-events-none' : 'hover:-translate-y-0.5'}
+        ui-surface`}
       onClick={() => {
         if (!disabled) document.getElementById('file-input')?.click();
       }}
       role="button"
       tabIndex={0}
-      aria-label="Upload invoice file. Drag and drop or click to browse"
+      aria-label={t('uploadZone.aria')}
     >
+      <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent" />
+      <div
+        className={`pointer-events-none absolute inset-0 transition-opacity duration-300 ${isDragOver ? 'opacity-100' : 'opacity-0'}`}
+      >
+        <div className="absolute inset-4 rounded-[28px] border border-cyan-400/35 animate-glow-pulse" />
+      </div>
+
       <input
         id="file-input"
         type="file"
@@ -66,27 +77,27 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onFileSelect, disabled = false 
         disabled={disabled}
       />
 
-      <div className="flex flex-col items-center">
-        <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4">
-          <FaCloudUploadAlt className="w-9 h-9 text-primary" />
+      <div className="relative flex flex-col items-center">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-300">
+          <FileUp className="h-8 w-8" />
         </div>
 
-        <h3 className="text-xl font-semibold text-neutral-900 mb-1">
-          Drop your invoice here
+        <h3 className={`mb-1 text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 ${textClass}`}>
+          {isDragOver ? t('uploadZone.dragDrop') : t('uploadZone.title')}
         </h3>
-        <p className="text-neutral-500 mb-4">or click to browse</p>
+        <p className={`mb-4 text-slate-500 dark:text-slate-400 ${textClass}`}>{t('uploadZone.hint')}</p>
 
-        <div className="flex items-center gap-4 text-sm text-neutral-500">
-          <div className="flex items-center gap-1.5">
-            <FaFilePdf className="text-red-500" /> PDF
+        <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
+          <div className="flex items-center gap-1.5 rounded-full border border-slate-200/70 bg-white/70 px-3 py-1.5 dark:border-slate-800/80 dark:bg-slate-950/45">
+            <FileText className="h-4 w-4 text-red-500" /> PDF
           </div>
-          <div className="flex items-center gap-1.5">
-            <FaImage className="text-cyan-500" /> JPG / PNG
+          <div className="flex items-center gap-1.5 rounded-full border border-slate-200/70 bg-white/70 px-3 py-1.5 dark:border-slate-800/80 dark:bg-slate-950/45">
+            <FileImage className="h-4 w-4 text-cyan-500 dark:text-cyan-300" /> JPG / PNG
           </div>
         </div>
 
-        <div className="mt-4 text-xs px-3 py-1 bg-neutral-100 rounded-full text-neutral-600">
-          Max file size: 10MB
+        <div className={`mt-4 rounded-full border border-slate-200/70 bg-white/70 px-3 py-1 text-xs text-slate-600 dark:border-slate-800/80 dark:bg-slate-950/45 dark:text-slate-300 ${textClass}`}>
+          {t('uploadZone.maxSize')}
         </div>
       </div>
     </div>

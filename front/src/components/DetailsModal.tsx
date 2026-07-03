@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
 import { Invoice, InvoiceData } from '../types/invoice';
-import { FaTimes, FaDownload } from 'react-icons/fa';
+import { BadgeCheck, Download, ReceiptText, X } from 'lucide-react';
 import { format } from 'date-fns';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { useLanguage } from './LanguageProvider';
 
 interface DetailsModalProps {
   invoice: Invoice | InvoiceData | null;
@@ -11,6 +12,9 @@ interface DetailsModalProps {
 }
 
 const DetailsModal: React.FC<DetailsModalProps> = ({ invoice, onClose }) => {
+  const { t, textClass, isAmharic } = useLanguage();
+  const thClass = `px-4 py-3 font-semibold text-slate-700 dark:text-slate-300 ${isAmharic ? 'i18n-am-header whitespace-normal text-xs leading-snug' : ''}`;
+
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -21,7 +25,6 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ invoice, onClose }) => {
 
   if (!invoice) return null;
 
-  /** Safely format a value as ETB currency — handles undefined, NaN, and string inputs. */
   const safeCurrency = (amount: number | string | undefined | null): string => {
     if (amount == null) return '—';
     const n = typeof amount === 'number' ? amount : parseFloat(String(amount).replace(/[^0-9.\-]/g, ''));
@@ -54,7 +57,6 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ invoice, onClose }) => {
     doc.text(`FS No: ${invoice.fs_no || '-'}`, 20, 53);
     doc.text(`Source: ${invoice.source || 'web'}`, 20, 60);
 
-    // Line items table
     const tableData = (invoice.items || []).map(item => [
       item.name,
       item.quantity.toString(),
@@ -78,76 +80,93 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ invoice, onClose }) => {
     doc.save(`invoice-${invoice.vendor.replace(/\s+/g, '-')}.pdf`);
   };
 
+  const detailFields = [
+    { label: t('modal.date'), value: formatDate(invoice.date) },
+    { label: t('modal.source'), value: invoice.source || 'web' },
+    { label: t('table.tin'), value: invoice.tin || '-' },
+    { label: t('table.fsNo'), value: invoice.fs_no || '-' },
+    { label: t('modal.subtotal'), value: safeCurrency(invoice.subtotal) },
+    { label: t('modal.vat'), value: safeCurrency(invoice.vat_amount) },
+  ];
+
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] p-4" onClick={onClose}>
-      <div 
-        className="modal bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-auto border border-neutral-200" 
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/65 p-4 backdrop-blur-md" onClick={onClose}>
+      <div
+        className={`modal ui-surface max-h-[90vh] w-full max-w-2xl overflow-auto rounded-2xl ${textClass}`}
         onClick={e => e.stopPropagation()}
       >
-        <div className="sticky top-0 bg-white px-6 py-4 border-b flex items-center justify-between z-10">
-          <h2 className="text-xl font-semibold text-neutral-900">Invoice Details</h2>
-          <button onClick={onClose} className="text-neutral-500 hover:text-neutral-800 p-1" aria-label="Close">
-            <FaTimes size={20} />
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200/70 bg-white/82 px-4 py-3 backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-950/72">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-300">
+              <ReceiptText className="h-4 w-4" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t('modal.details')}</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{t('modal.reviewExport')}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="rounded-2xl border border-slate-200/70 bg-white/80 p-2 text-slate-500 transition hover:text-slate-900 dark:border-slate-800/80 dark:bg-slate-950/45 dark:text-slate-300 dark:hover:text-slate-100" aria-label={t('modal.close')}>
+            <X size={18} />
           </button>
         </div>
 
-        <div className="p-6 space-y-6">
-          {/* Header Info */}
-          <div className="grid grid-cols-2 gap-6">
+        <div className="space-y-4 p-4">
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <div className="uppercase text-xs tracking-[1px] text-neutral-500">Vendor</div>
-              <div className="font-semibold text-2xl">{invoice.vendor}</div>
+              <div className="uppercase text-xs tracking-[1px] text-slate-500 dark:text-slate-400">{t('modal.vendor')}</div>
+              <div className="text-xl font-semibold text-slate-900 dark:text-slate-100">{invoice.vendor}</div>
             </div>
             <div className="text-right">
-              <div className="uppercase text-xs tracking-[1px] text-neutral-500">Total Amount</div>
-              <div className="text-3xl font-bold text-primary">{safeCurrency(invoice.grand_total)}</div>
+              <div className="uppercase text-xs tracking-[1px] text-slate-500 dark:text-slate-400">{t('modal.totalAmount')}</div>
+              <div className="text-2xl font-bold font-mono text-cyan-600 dark:text-cyan-300">{safeCurrency(invoice.grand_total)}</div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-sm">
-            <div><span className="text-neutral-500">Date:</span> {formatDate(invoice.date)}</div>
-            <div><span className="text-neutral-500">Source:</span> {invoice.source || 'web'}</div>
-            <div><span className="text-neutral-500">TIN:</span> {invoice.tin || '-'}</div>
-            <div><span className="text-neutral-500">FS No:</span> {invoice.fs_no || '-'}</div>
-            {invoice.subtotal != null && (
-              <div><span className="text-neutral-500">Subtotal:</span> {safeCurrency(invoice.subtotal)}</div>
-            )}
-            {invoice.vat_amount != null && (
-              <div><span className="text-neutral-500">VAT:</span> {safeCurrency(invoice.vat_amount)}</div>
-            )}
-            <div><span className="text-neutral-500">Items:</span> {invoice.items?.length || 0}</div>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {detailFields.map(({ label, value }) => (
+              <div key={label} className="rounded-xl border border-slate-200/70 bg-white/72 px-3 py-2.5 dark:border-slate-800/80 dark:bg-slate-950/45">
+                <div className="text-[11px] uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">{label}</div>
+                <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">{value}</div>
+              </div>
+            ))}
+            <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/8 px-3 py-2.5">
+              <div className="text-[11px] uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">{t('modal.items')}</div>
+              <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">{invoice.items?.length || 0}</div>
+            </div>
           </div>
 
-          {/* Items */}
           <div>
-            <h3 className="font-semibold mb-3 text-neutral-800">Line Items</h3>
-            <div className="rounded-2xl border overflow-hidden">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-neutral-50">
-                    <th className="text-left px-4 py-3">Item</th>
-                    <th className="text-center px-4 py-3 w-16">Qty</th>
-                    <th className="text-right px-4 py-3">Unit</th>
-                    <th className="text-right px-4 py-3">Total</th>
+            <div className="mb-3 flex items-center gap-2 text-slate-800 dark:text-slate-100">
+              <BadgeCheck className="h-4 w-4 text-cyan-600 dark:text-cyan-300" />
+              <h3 className="font-semibold">{t('modal.lineItems')}</h3>
+            </div>
+            <div className="overflow-x-auto rounded-xl border border-slate-200/70 bg-white/75 dark:border-slate-800/80 dark:bg-slate-950/45">
+              <table className={`w-full text-sm ${isAmharic ? 'min-w-[36rem]' : ''}`}>
+                <thead className="bg-slate-100/80 dark:bg-slate-900/72">
+                  <tr>
+                    <th className={`${thClass} text-left`}>{t('results.item')}</th>
+                    <th className={`${thClass} w-16 text-center`}>{t('results.qty')}</th>
+                    <th className={`${thClass} min-w-[7rem] text-right`}>{t('modal.unit')}</th>
+                    <th className={`${thClass} text-right`}>{t('results.total')}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
+                <tbody className="divide-y divide-slate-200/70 dark:divide-slate-800/80">
                   {(invoice.items || []).map((item, idx) => (
-                    <tr key={idx}>
-                      <td className="px-4 py-3">{item.name}</td>
-                      <td className="px-4 py-3 text-center">{item.quantity}</td>
-                      <td className="px-4 py-3 text-right">{safeCurrency(item.unit_price)}</td>
-                      <td className="px-4 py-3 text-right font-medium">{safeCurrency(item.total)}</td>
+                    <tr key={idx} className="hover:bg-cyan-500/5 dark:hover:bg-slate-900/60">
+                      <td className="px-4 py-3 text-slate-800 dark:text-slate-100">{item.name}</td>
+                      <td className="px-4 py-3 text-center text-slate-600 dark:text-slate-300">{item.quantity}</td>
+                      <td className="px-4 py-3 text-right font-mono text-slate-700 dark:text-slate-300">{safeCurrency(item.unit_price)}</td>
+                      <td className="px-4 py-3 text-right font-mono font-medium text-slate-900 dark:text-slate-100">{safeCurrency(item.total)}</td>
                     </tr>
                   ))}
                   {(!invoice.items || invoice.items.length === 0) && (
-                    <tr><td colSpan={4} className="p-4 text-center text-neutral-500">No items</td></tr>
+                    <tr><td colSpan={4} className="p-4 text-center text-slate-500 dark:text-slate-400">{t('modal.noItems')}</td></tr>
                   )}
                 </tbody>
                 <tfoot>
-                  <tr className="bg-neutral-50 font-semibold">
-                    <td colSpan={3} className="px-4 py-3 text-right">Grand Total</td>
-                    <td className="px-4 py-3 text-right text-lg text-primary">{safeCurrency(invoice.grand_total)}</td>
+                  <tr className="bg-slate-100/80 font-semibold dark:bg-slate-900/72">
+                    <td colSpan={3} className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{t('table.grandTotal')}</td>
+                    <td className="px-4 py-3 text-right text-lg font-mono text-cyan-600 dark:text-cyan-300">{safeCurrency(invoice.grand_total)}</td>
                   </tr>
                 </tfoot>
               </table>
@@ -156,24 +175,24 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ invoice, onClose }) => {
 
           {invoice.items_summary && (
             <div>
-              <div className="text-sm text-neutral-500">Items Summary</div>
-              <div className="mt-1">{invoice.items_summary}</div>
+              <div className="text-sm text-slate-500 dark:text-slate-400">{t('modal.itemsSummary')}</div>
+              <div className="mt-1 rounded-2xl border border-dashed border-cyan-500/20 bg-cyan-500/5 px-4 py-3 text-slate-700 dark:text-slate-300">{invoice.items_summary}</div>
             </div>
           )}
         </div>
 
-        <div className="sticky bottom-0 bg-white px-6 py-4 border-t flex gap-3">
-          <button 
+        <div className="sticky bottom-0 flex gap-2 border-t border-slate-200/70 bg-white/82 px-4 py-3 backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-950/72">
+          <button
             onClick={downloadPDF}
-            className="flex-1 flex items-center justify-center gap-2 bg-primary text-white py-3 rounded-2xl font-semibold hover:bg-cyan-600"
+            className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-500 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
           >
-            <FaDownload /> Download PDF
+            <Download className="h-4 w-4" /> {t('modal.downloadPdf')}
           </button>
-          <button 
+          <button
             onClick={onClose}
-            className="flex-1 py-3 rounded-2xl border border-neutral-300 font-medium hover:bg-neutral-50"
+            className="flex-1 rounded-xl border border-slate-200/70 bg-white/80 py-2.5 text-sm font-medium text-slate-700 transition hover:text-cyan-600 dark:border-slate-800/80 dark:bg-slate-950/45 dark:text-slate-200 dark:hover:text-cyan-300"
           >
-            Close
+            {t('modal.close')}
           </button>
         </div>
       </div>

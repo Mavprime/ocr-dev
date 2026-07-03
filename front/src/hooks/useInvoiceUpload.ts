@@ -152,11 +152,11 @@ export const useInvoiceUpload = (): UseInvoiceUploadReturn => {
           if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
             errorMessage = 'Processing took too long. Try a smaller or clearer file.';
           } else if (!err.response) {
-            errorMessage = 'Unable to reach the server. Check the webhook URL / your connection.';
+            errorMessage = 'Unable to reach the server. Check your connection and try again.';
           } else if (err.response.status === 413) {
             errorMessage = 'File is too large.';
           } else if (err.response.status === 404) {
-            errorMessage = 'Webhook not found. Is the n8n workflow active?';
+            errorMessage = 'Service unavailable. Please try again later.';
           } else {
             errorMessage = (err.response.data as any)?.message || 'Upload failed.';
           }

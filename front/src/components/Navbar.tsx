@@ -1,158 +1,136 @@
 import React, { useState } from 'react';
-import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { FaUpload, FaListAlt, FaBars, FaTimes, FaArrowRight } from 'react-icons/fa';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Menu, Moon, SunMedium, X } from 'lucide-react';
+
+import { navGroupDefs, scrollToSection } from '../lib/navigation';
+import LanguageToggle from './LanguageToggle';
+import { useLanguage } from './LanguageProvider';
+import { useTheme } from './ThemeProvider';
 
 const Navbar: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
+  const { t, textClass } = useLanguage();
   const location = useLocation();
+  const navigate = useNavigate();
 
-  const isHome = location.pathname === '/';
+  const closeMenu = () => setMenuOpen(false);
 
-  /** Scroll to a hash section. If not on home page, navigate home first. */
-  const scrollTo = (hash: string) => {
+  const handleHashNav = (hash: string) => {
     closeMenu();
-    if (isHome) {
-      const el = document.querySelector(hash);
-      el?.scrollIntoView({ behavior: 'smooth' });
-    } else {
-      navigate('/' + hash);
-    }
+    scrollToSection(hash, navigate, location.pathname);
   };
 
-  const closeMenu = () => setIsOpen(false);
-
-  const anchorLinks = [
-    { hash: '#problem', label: 'The Problem' },
-    { hash: '#who', label: 'Who It\'s For' },
-    { hash: '#how', label: 'How It Works' },
-    { hash: '#product', label: 'Product' },
-    { hash: '#faq', label: 'FAQ' },
-  ];
-
   return (
-    <nav className="bg-white/95 backdrop-blur border-b border-neutral-200 sticky top-0 z-50">
-      <div className="max-w-6xl mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 shrink-0" onClick={closeMenu}>
-            <img src="/Alogo.png" alt="Addis Invoice" className="w-9 h-9 rounded-xl object-contain" />
-            <div className="hidden sm:block">
-              <div className="font-semibold text-lg text-neutral-900 leading-tight">Addis Invoice</div>
-              <div className="text-[10px] text-neutral-500 -mt-0.5">Smart OCR for Ethiopia</div>
-            </div>
-          </Link>
-
-          {/* Desktop nav */}
-          <div className="hidden lg:flex items-center gap-1">
-            {anchorLinks.map(({ hash, label }) => (
-              <button
-                key={hash}
-                onClick={() => scrollTo(hash)}
-                className="px-3 py-2 rounded-lg text-sm font-medium text-neutral-600 hover:text-primary hover:bg-primary/5 transition-colors"
-              >
-                {label}
-              </button>
-            ))}
-            <div className="w-px h-5 bg-neutral-200 mx-2" />
-            <NavLink
-              to="/upload"
-              className={({ isActive }) =>
-                `px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'text-primary bg-primary/10'
-                    : 'text-neutral-600 hover:text-primary hover:bg-primary/5'
-                }`
-              }
-            >
-              Upload
-            </NavLink>
-            <NavLink
-              to="/invoices"
-              className={({ isActive }) =>
-                `px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'text-primary bg-primary/10'
-                    : 'text-neutral-600 hover:text-primary hover:bg-primary/5'
-                }`
-              }
-            >
-              Invoices
-            </NavLink>
-            <a
-              href="#cta"
-              onClick={(e) => {
-                e.preventDefault();
-                scrollTo('#cta');
-              }}
-              className="ml-2 inline-flex items-center gap-1.5 bg-primary text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-cyan-600 transition-colors"
-            >
-              Book a demo
-              <FaArrowRight className="w-3 h-3" />
-            </a>
+    <nav className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/78 backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-950/78">
+      <div className="mx-auto flex h-14 max-w-[1600px] items-center justify-between px-4 md:px-6">
+        <Link to="/" className="flex items-center gap-2.5" onClick={closeMenu}>
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-cyan-600 shadow-[0_0_0_1px_rgba(34,211,238,0.25)]">
+            <span className="text-base font-bold text-slate-950">A</span>
           </div>
+          <div>
+            <div className="text-sm font-semibold tracking-tight text-slate-900 dark:text-slate-50">
+              Addis Invoice
+            </div>
+            <div className={`text-[10px] uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400 ${textClass}`}>
+              {t('nav.tagline')}
+            </div>
+          </div>
+        </Link>
 
-          {/* Mobile hamburger */}
+        <div className="flex items-center gap-2">
+          <LanguageToggle />
+
           <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="lg:hidden p-2 text-neutral-600 hover:text-neutral-900"
-            aria-label="Toggle menu"
+            type="button"
+            onClick={toggleTheme}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200/70 bg-white/82 text-slate-700 shadow-sm transition-all hover:text-cyan-600 dark:border-slate-800/80 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:text-cyan-300"
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
           >
-            {isOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
+            {theme === 'dark' ? <SunMedium className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setMenuOpen((open) => !open)}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200/70 bg-white/82 text-slate-700 shadow-sm transition-all hover:text-cyan-600 lg:hidden dark:border-slate-800/80 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:text-cyan-300"
+            aria-label={menuOpen ? t('nav.closeMenu') : t('nav.openMenu')}
+            aria-expanded={menuOpen}
+          >
+            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
-
-        {/* Mobile menu */}
-        {isOpen && (
-          <div className="lg:hidden border-t border-neutral-200 py-4 space-y-1">
-            {anchorLinks.map(({ hash, label }) => (
-              <button
-                key={hash}
-                onClick={() => scrollTo(hash)}
-                className="w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium text-neutral-600 hover:text-primary hover:bg-primary/5 transition-colors"
-              >
-                {label}
-              </button>
-            ))}
-            <div className="border-t border-neutral-100 my-2" />
-            <NavLink
-              to="/upload"
-              onClick={closeMenu}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                  isActive ? 'text-primary bg-primary/10' : 'text-neutral-600'
-                }`
-              }
-            >
-              <FaUpload className="w-4 h-4" />
-              Upload Invoice
-            </NavLink>
-            <NavLink
-              to="/invoices"
-              onClick={closeMenu}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                  isActive ? 'text-primary bg-primary/10' : 'text-neutral-600'
-                }`
-              }
-            >
-              <FaListAlt className="w-4 h-4" />
-              My Invoices
-            </NavLink>
-            <a
-              href="#cta"
-              onClick={(e) => {
-                e.preventDefault();
-                scrollTo('#cta');
-              }}
-              className="flex items-center justify-center gap-2 bg-primary text-white mt-2 px-4 py-2.5 rounded-xl text-sm font-semibold"
-            >
-              Book a demo
-              <FaArrowRight className="w-3 h-3" />
-            </a>
-          </div>
-        )}
       </div>
+
+      {menuOpen && (
+        <div className="border-t border-slate-200/70 bg-white/95 px-4 py-3 backdrop-blur-xl lg:hidden dark:border-slate-800/80 dark:bg-slate-950/95">
+          <nav className="mx-auto max-w-[1600px] space-y-4" aria-label="Mobile navigation">
+            {navGroupDefs.map((group) => (
+              <div key={group.labelKey}>
+                <div className={`mb-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 ${textClass}`}>
+                  {t(group.labelKey)}
+                </div>
+                <div className="space-y-0.5">
+                  {group.items.map((item) => {
+                    const Icon = item.icon;
+                    const label = t(item.labelKey);
+
+                    if (item.type === 'route') {
+                      return (
+                        <NavLink
+                          key={item.labelKey}
+                          to={item.to}
+                          end={item.to === '/'}
+                          onClick={closeMenu}
+                          className={({ isActive }) =>
+                            `flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${textClass} ${
+                              isActive
+                                ? 'bg-cyan-500/12 text-cyan-700 dark:text-cyan-300'
+                                : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/60 dark:hover:text-slate-50'
+                            }`
+                          }
+                        >
+                          <Icon className="h-4 w-4 shrink-0" />
+                          {label}
+                        </NavLink>
+                      );
+                    }
+
+                    if (item.type === 'external') {
+                      return (
+                        <a
+                          key={item.labelKey}
+                          href={item.to}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={closeMenu}
+                          className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100/80 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/60 dark:hover:text-slate-50 ${textClass}`}
+                        >
+                          <Icon className="h-4 w-4 shrink-0" />
+                          {label}
+                        </a>
+                      );
+                    }
+
+                    return (
+                      <button
+                        key={item.labelKey}
+                        type="button"
+                        onClick={() => handleHashNav(item.to)}
+                        className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100/80 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/60 dark:hover:text-slate-50 ${textClass}`}
+                      >
+                        <Icon className="h-4 w-4 shrink-0" />
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </nav>
+        </div>
+      )}
     </nav>
   );
 };
