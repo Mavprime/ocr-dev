@@ -76,6 +76,8 @@ const Invoices: React.FC = () => {
     <tr>
       <td className="px-6 py-4"><div className="skeleton h-4 w-24 rounded" /></td>
       <td className="px-6 py-4"><div className="skeleton h-4 w-32 rounded" /></td>
+      <td className="px-4 py-4"><div className="skeleton h-4 w-20 rounded" /></td>
+      <td className="px-4 py-4"><div className="skeleton h-4 w-24 rounded" /></td>
       <td className="px-6 py-4"><div className="skeleton h-4 w-16 rounded ml-auto" /></td>
       <td className="px-6 py-4"><div className="skeleton h-4 w-40 rounded" /></td>
       <td className="px-6 py-4"><div className="skeleton h-5 w-12 rounded-full mx-auto" /></td>
@@ -118,7 +120,9 @@ const Invoices: React.FC = () => {
               <tr>
                 <th className="text-left px-6 py-4">Date</th>
                 <th className="text-left px-6 py-4">Vendor</th>
-                <th className="text-right px-6 py-4">Amount</th>
+                <th className="text-left px-4 py-4">TIN</th>
+                <th className="text-left px-4 py-4">FS_No</th>
+                <th className="text-right px-6 py-4">Total</th>
                 <th className="text-left px-6 py-4">Items</th>
                 <th className="text-center px-6 py-4">Source</th>
                 <th className="text-right px-6 py-4">Actions</th>

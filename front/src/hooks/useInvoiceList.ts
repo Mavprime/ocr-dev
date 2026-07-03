@@ -4,7 +4,7 @@ import { Invoice } from '../types/invoice';
 import api, { getUserId } from '../lib/api';
 
 // Webhook trigger path appended to VITE_API_URL (or its localhost fallback).
-const INVOICES_PATH = '8d8ca621-7124-4b26-91ef-e7febd5e4341';
+const INVOICES_PATH = 'invoices-history';
 
 const MAX_HISTORY = 15;
 
@@ -21,6 +21,10 @@ const normalizeInvoice = (raw: any, idx: number): Invoice => {
     items: Array.isArray(raw.items) ? raw.items : [],
     source: raw.source ?? raw.Source ?? 'web',
     created_at: raw.created_at ?? raw.date ?? raw.Date ?? '',
+    tin: raw.tin ?? raw.TIN ?? undefined,
+    fs_no: raw.fs_no ?? raw.FS_No ?? undefined,
+    subtotal: raw.subtotal ?? raw.Subtotal ?? undefined,
+    vat_amount: raw.vat_amount ?? raw.VAT_Amount ?? raw.VAT ?? undefined,
   };
 };
 

@@ -78,17 +78,19 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({
               >
                 Date {renderSortIcon('date')}
               </th>
-              <th 
-                className="text-left px-6 py-4 font-semibold cursor-pointer select-none hover:bg-neutral-100" 
+              <th
+                className="text-left px-6 py-4 font-semibold cursor-pointer select-none hover:bg-neutral-100"
                 onClick={() => handleSort('vendor')}
               >
                 Vendor {renderSortIcon('vendor')}
               </th>
-              <th 
-                className="text-right px-6 py-4 font-semibold cursor-pointer select-none hover:bg-neutral-100" 
+              <th className="text-left px-4 py-4 font-semibold">TIN</th>
+              <th className="text-left px-4 py-4 font-semibold">FS_No</th>
+              <th
+                className="text-right px-6 py-4 font-semibold cursor-pointer select-none hover:bg-neutral-100"
                 onClick={() => handleSort('amount')}
               >
-                Amount {renderSortIcon('amount')}
+                Total {renderSortIcon('amount')}
               </th>
               <th className="text-left px-6 py-4 font-semibold">Items</th>
               <th className="text-center px-6 py-4 font-semibold">Source</th>
@@ -103,6 +105,12 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({
                 </td>
                 <td className="px-6 py-4 font-medium text-neutral-900">
                   {invoice.vendor}
+                </td>
+                <td className="px-4 py-4 text-neutral-600 text-sm font-mono whitespace-nowrap">
+                  {invoice.tin || '-'}
+                </td>
+                <td className="px-4 py-4 text-neutral-600 text-sm whitespace-nowrap">
+                  {invoice.fs_no || '-'}
                 </td>
                 <td className="px-6 py-4 text-right font-semibold text-neutral-900 whitespace-nowrap">
                   {formatCurrency(invoice.grand_total)}

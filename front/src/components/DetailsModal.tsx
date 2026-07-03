@@ -46,7 +46,9 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ invoice, onClose }) => {
     doc.setFontSize(12);
     doc.text(`Vendor: ${invoice.vendor}`, 20, 32);
     doc.text(`Date: ${formatDate(invoice.date)}`, 20, 39);
-    doc.text(`Source: ${invoice.source || 'web'}`, 20, 46);
+    doc.text(`TIN: ${invoice.tin || '-'}`, 20, 46);
+    doc.text(`FS No: ${invoice.fs_no || '-'}`, 20, 53);
+    doc.text(`Source: ${invoice.source || 'web'}`, 20, 60);
 
     // Line items table
     const tableData = (invoice.items || []).map(item => [
@@ -57,7 +59,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ invoice, onClose }) => {
     ]);
 
     (doc as any).autoTable({
-      startY: 55,
+      startY: 70,
       head: [['Item', 'Qty', 'Unit Price', 'Total']],
       body: tableData,
       theme: 'grid',
@@ -98,9 +100,17 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ invoice, onClose }) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-1 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-sm">
             <div><span className="text-neutral-500">Date:</span> {formatDate(invoice.date)}</div>
             <div><span className="text-neutral-500">Source:</span> {invoice.source || 'web'}</div>
+            <div><span className="text-neutral-500">TIN:</span> {invoice.tin || '-'}</div>
+            <div><span className="text-neutral-500">FS No:</span> {invoice.fs_no || '-'}</div>
+            {invoice.subtotal != null && (
+              <div><span className="text-neutral-500">Subtotal:</span> {formatCurrency(invoice.subtotal)}</div>
+            )}
+            {invoice.vat_amount != null && (
+              <div><span className="text-neutral-500">VAT:</span> {formatCurrency(invoice.vat_amount)}</div>
+            )}
             <div><span className="text-neutral-500">Items:</span> {invoice.items?.length || 0}</div>
           </div>
 
