@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useInvoiceUpload } from '../hooks/useInvoiceUpload';
+import { useInvoiceList } from '../hooks/useInvoiceList';
 import UploadZone from '../components/UploadZone';
 import ResultsCard from '../components/ResultsCard';
 import DetailsModal from '../components/DetailsModal';
@@ -11,7 +12,7 @@ import 'jspdf-autotable';
 import toast from 'react-hot-toast';
 
 // Webhook trigger path appended to VITE_API_URL (or its localhost fallback).
-const INVOICES_PATH = '8d8ca621-7124-4b26-91ef-e7febd5e4341';
+const INVOICES_PATH = 'invoices-history';
 
 const MAX_HISTORY = 15;
 
@@ -27,6 +28,10 @@ const normalizeInvoice = (raw: any, idx: number): Invoice => {
     items: Array.isArray(raw.items) ? raw.items : [],
     source: raw.source ?? raw.Source ?? 'web',
     created_at: raw.created_at ?? raw.date ?? raw.Date ?? '',
+    tin: raw.tin ?? raw.TIN ?? undefined,
+    fs_no: raw.fs_no ?? raw.FS_No ?? undefined,
+    subtotal: raw.subtotal ?? raw.Subtotal ?? undefined,
+    vat_amount: raw.vat_amount ?? raw.VAT_Amount ?? raw.VAT ?? undefined,
   };
 };
 
@@ -50,10 +55,17 @@ const fetchLatestInvoice = async (): Promise<Invoice | null> => {
 
 const Upload: React.FC = () => {
   const { uploadFile, status, progress, data, error, reset } = useInvoiceUpload();
+  const { totalCount, isLoading: isHistoryLoading, error: historyError, refetch: refetchHistory } = useInvoiceList();
   const navigate = useNavigate();
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [modalInvoice, setModalInvoice] = useState<Invoice | null>(null);
   const [isFetchingInvoice, setIsFetchingInvoice] = useState(false);
+
+  /** Reset upload state AND refresh the invoice count for the limit guard. */
+  const handleReset = () => {
+    reset();
+    refetchHistory();
+  };
 
   const handleFileSelect = (file: File) => {
     reset();
@@ -108,8 +120,51 @@ const Upload: React.FC = () => {
         <p className="text-neutral-600 mt-1">Quick, accurate invoice processing</p>
       </div>
 
-      {/* Initial upload zone */}
-      {status === 'idle' && <UploadZone onFileSelect={handleFileSelect} disabled={false} />}
+      {/* Initial upload zone — with 3-upload limit guard */}
+      {status === 'idle' && (
+        <>
+          {isHistoryLoading ? (
+            <div>
+              <UploadZone onFileSelect={handleFileSelect} disabled={false} />
+              <p className="text-center text-xs text-neutral-400 mt-3">Checking upload limit…</p>
+            </div>
+          ) : historyError ? (
+            <div>
+              <UploadZone onFileSelect={handleFileSelect} disabled={false} />
+              <p className="text-center text-xs text-amber-500 mt-3">
+                Could not check upload limit. Uploads may be restricted.
+              </p>
+            </div>
+          ) : totalCount >= 3 ? (
+            <div>
+              <UploadZone onFileSelect={handleFileSelect} disabled={true} />
+              <div className="mt-4 bg-amber-50 border border-amber-200 rounded-2xl p-5 text-center">
+                <p className="font-semibold text-amber-800 text-lg">
+                  Upload Limit Reached (3/3) — Upgrade to Premium
+                </p>
+                <p className="text-sm text-amber-600 mt-1 mb-4">
+                  You have used all 3 free uploads. Upgrade to continue processing invoices.
+                </p>
+                <a
+                  href="https://wa.me/251978407848"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-cyan-600 transition-colors"
+                >
+                  Upgrade via WhatsApp
+                </a>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <UploadZone onFileSelect={handleFileSelect} disabled={false} />
+              <p className="text-center text-xs text-neutral-400 mt-3">
+                {totalCount} of 3 free uploads used
+              </p>
+            </div>
+          )}
+        </>
+      )}
 
       {/* Upload progress (sending bytes) */}
       {status === 'uploading' && (
@@ -165,7 +220,7 @@ const Upload: React.FC = () => {
               {isFetchingInvoice ? 'Loading…' : 'View Invoice'}
             </button>
             <button
-              onClick={reset}
+              onClick={handleReset}
               className="px-6 py-2.5 bg-white border border-neutral-300 hover:bg-neutral-50 text-neutral-700 rounded-2xl font-medium transition-colors"
             >
               Upload Another
@@ -183,7 +238,7 @@ const Upload: React.FC = () => {
               toast.success('Saved to your Google Sheet.', { icon: '🗂️' });
               navigate('/invoices');
             }}
-            onUploadAnother={reset}
+            onUploadAnother={handleReset}
             onDownload={handleDownload}
             onViewInvoice={() => setShowDetailModal(true)}
           />
@@ -205,7 +260,7 @@ const Upload: React.FC = () => {
               <p className="font-medium text-red-800">Upload failed</p>
               <p className="text-red-700 mt-1 text-sm">{error}</p>
               <button
-                onClick={reset}
+                onClick={handleReset}
                 className="mt-3 text-sm px-4 py-1.5 rounded-xl bg-white border border-red-300 hover:bg-red-50 text-red-700 font-medium"
               >
                 Try again

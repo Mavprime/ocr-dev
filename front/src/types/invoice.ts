@@ -12,6 +12,10 @@ export interface InvoiceData {
   items: InvoiceItem[];
   items_summary: string;
   source?: string;
+  tin?: string;          // Taxpayer Identification Number
+  fs_no?: string;        // Fiscal Station Number
+  subtotal?: number;     // Amount before VAT
+  vat_amount?: number;   // VAT amount
 }
 
 export interface Invoice extends InvoiceData {
