@@ -29,12 +29,16 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentInvoices = invoices.slice(startIndex, startIndex + itemsPerPage);
 
-  const formatCurrency = (amount: number) => {
+  /** Safely format a value as ETB currency — handles undefined, NaN, and string inputs. */
+  const safeCurrency = (amount: number | string | undefined | null): string => {
+    if (amount == null) return '—';
+    const n = typeof amount === 'number' ? amount : parseFloat(String(amount).replace(/[^0-9.\-]/g, ''));
+    if (!isFinite(n)) return '—';
     return new Intl.NumberFormat('en-ET', {
       style: 'currency',
       currency: 'ETB',
       minimumFractionDigits: 0,
-    }).format(amount);
+    }).format(n);
   };
 
   const formatDateShort = (dateStr: string) => {
@@ -107,13 +111,13 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({
                   {invoice.vendor}
                 </td>
                 <td className="px-4 py-4 text-neutral-600 text-sm font-mono whitespace-nowrap">
-                  {invoice.tin || '-'}
+                  {invoice?.tin || '-'}
                 </td>
                 <td className="px-4 py-4 text-neutral-600 text-sm whitespace-nowrap">
-                  {invoice.fs_no || '-'}
+                  {invoice?.fs_no || '-'}
                 </td>
                 <td className="px-6 py-4 text-right font-semibold text-neutral-900 whitespace-nowrap">
-                  {formatCurrency(invoice.grand_total)}
+                  {safeCurrency(invoice.grand_total)}
                 </td>
                 <td className="px-6 py-4 text-neutral-600 max-w-[260px] truncate">
                   {invoice.items_summary || (invoice.items?.length ? `${invoice.items.length} items` : '-')}

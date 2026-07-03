@@ -99,7 +99,7 @@ export const useInvoiceUpload = (): UseInvoiceUploadReturn => {
 
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('User_ID', getUserId());
+    formData.append('user_id', getUserId());
 
     const controller = new AbortController();
     abortRef.current = controller;

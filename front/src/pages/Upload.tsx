@@ -16,6 +16,14 @@ const INVOICES_PATH = 'invoices-history';
 
 const MAX_HISTORY = 15;
 
+/** Safely coerce a raw value (number, string, or null/undefined) into a number or undefined. */
+const parseNumeric = (v: any): number | undefined => {
+  if (v == null) return undefined;
+  if (typeof v === 'number') return isFinite(v) ? v : undefined;
+  const n = parseFloat(String(v).replace(/[^0-9.\-]/g, ''));
+  return isFinite(n) ? n : undefined;
+};
+
 /** Same normalisation as useInvoiceList so the modal gets a proper Invoice shape. */
 const normalizeInvoice = (raw: any, idx: number): Invoice => {
   const grand = raw.grand_total ?? raw['Total Amount'] ?? raw.total ?? 0;
@@ -30,8 +38,8 @@ const normalizeInvoice = (raw: any, idx: number): Invoice => {
     created_at: raw.created_at ?? raw.date ?? raw.Date ?? '',
     tin: raw.tin ?? raw.TIN ?? undefined,
     fs_no: raw.fs_no ?? raw.FS_No ?? undefined,
-    subtotal: raw.subtotal ?? raw.Subtotal ?? undefined,
-    vat_amount: raw.vat_amount ?? raw.VAT_Amount ?? raw.VAT ?? undefined,
+    subtotal: parseNumeric(raw.subtotal ?? raw.Subtotal),
+    vat_amount: parseNumeric(raw.vat_amount ?? raw.VAT_Amount ?? raw.VAT),
   };
 };
 
