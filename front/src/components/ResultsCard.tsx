@@ -1,7 +1,8 @@
 import React from 'react';
 import { InvoiceData } from '../types/invoice';
-import { FaCheckCircle, FaSave, FaRedo, FaDownload, FaEye } from 'react-icons/fa';
+import { ArrowRight, BadgeCheck, Download, Eye, RefreshCcw, Save } from 'lucide-react';
 import { format } from 'date-fns';
+import { useLanguage } from './LanguageProvider';
 
 interface ResultsCardProps {
   data: InvoiceData;
@@ -20,7 +21,9 @@ const ResultsCard: React.FC<ResultsCardProps> = ({
   onViewInvoice,
   isSaving = false
 }) => {
-  /** Safely format a value as ETB currency — handles undefined, NaN, and string inputs. */
+  const { t, textClass, isAmharic } = useLanguage();
+  const thClass = `px-4 py-3 font-semibold text-slate-700 dark:text-slate-300 ${isAmharic ? 'i18n-am-header whitespace-normal text-xs leading-snug' : ''}`;
+
   const safeCurrency = (amount: number | string | undefined | null): string => {
     if (amount == null) return '—';
     const n = typeof amount === 'number' ? amount : parseFloat(String(amount).replace(/[^0-9.\-]/g, ''));
@@ -40,130 +43,121 @@ const ResultsCard: React.FC<ResultsCardProps> = ({
     }
   };
 
+  const specFields = [
+    { label: t('results.vendor'), value: data.vendor || t('results.unknown') },
+    { label: t('results.invoiceDate'), value: formatDate(data.date) },
+    { label: t('results.grandTotal'), value: safeCurrency(data.grand_total), valueClass: 'font-mono text-cyan-600 dark:text-cyan-300' },
+  ];
+
   return (
-    <div className="bg-white rounded-3xl border border-neutral-200 p-8 invoice-card">
-      {/* Success Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 bg-success/10 rounded-full flex items-center justify-center">
-          <FaCheckCircle className="text-success w-6 h-6" />
-        </div>
-        <div>
-          <h3 className="text-xl font-semibold text-neutral-900">Invoice Extracted</h3>
-          <p className="text-sm text-success">Successfully processed</p>
-        </div>
-      </div>
-
-      {/* Key Info */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div>
-          <div className="text-xs uppercase tracking-wider text-neutral-500 font-medium mb-1">VENDOR</div>
-          <div className="text-2xl font-semibold text-neutral-900">{data.vendor}</div>
-        </div>
-
-        <div>
-          <div className="text-xs uppercase tracking-wider text-neutral-500 font-medium mb-1">DATE</div>
-          <div className="text-2xl font-semibold text-neutral-900">{formatDate(data.date)}</div>
-        </div>
-
-        <div>
-          <div className="text-xs uppercase tracking-wider text-neutral-500 font-medium mb-1">TOTAL</div>
-          <div className="text-3xl font-bold text-primary amount">
-            {safeCurrency(data.grand_total)}
+    <div className={`ui-surface rounded-2xl p-5 invoice-card animate-reveal-up ${textClass}`}>
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-300">
+            <BadgeCheck className="h-4 w-4" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t('results.extracted')}</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{t('results.reviewBeforeSave')}</p>
           </div>
         </div>
+        <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-cyan-700 dark:text-cyan-300">
+          {t('results.ready')}
+        </div>
       </div>
 
-      {/* Items Table */}
-      <div className="mb-6">
-        <div className="text-sm font-semibold text-neutral-700 mb-3">LINE ITEMS</div>
-        
-        <div className="overflow-hidden rounded-2xl border border-neutral-200">
-          <table className="w-full text-sm">
-            <thead className="bg-neutral-50">
-              <tr>
-                <th className="text-left px-4 py-3 font-medium">Item</th>
-                <th className="text-center px-4 py-3 font-medium w-20">Qty</th>
-                <th className="text-right px-4 py-3 font-medium">Unit Price</th>
-                <th className="text-right px-4 py-3 font-medium">Total</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-200">
-              {data.items && data.items.length > 0 ? (
-                data.items.map((item, index) => (
-                  <tr key={index} className="hover:bg-neutral-50">
-                    <td className="px-4 py-3 font-medium text-neutral-800">{item.name}</td>
-                    <td className="px-4 py-3 text-center text-neutral-600">{item.quantity}</td>
-                    <td className="px-4 py-3 text-right text-neutral-600">
-                      {safeCurrency(item.unit_price)}
-                    </td>
-                    <td className="px-4 py-3 text-right font-semibold text-neutral-900">
-                      {safeCurrency(item.total)}
+      <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+        <div className="rounded-xl border border-slate-200/70 bg-white/72 p-4 dark:border-slate-800/80 dark:bg-slate-950/45">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">{t('results.lineItems')}</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">{t('results.rows', { count: data.items?.length || 0 })}</div>
+          </div>
+
+          <div className="overflow-x-auto rounded-[24px] border border-slate-200/70 dark:border-slate-800/80">
+            <table className={`w-full text-sm ${isAmharic ? 'min-w-[36rem]' : ''}`}>
+              <thead className="bg-slate-100/80 dark:bg-slate-900/70">
+                <tr>
+                  <th className={`${thClass} text-left`}>{t('results.item')}</th>
+                  <th className={`${thClass} text-center`}>{t('results.qty')}</th>
+                  <th className={`${thClass} min-w-[7rem] text-right`}>{t('results.unitPrice')}</th>
+                  <th className={`${thClass} text-right`}>{t('results.total')}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200/70 dark:divide-slate-800/80">
+                {data.items && data.items.length > 0 ? (
+                  data.items.map((item, index) => (
+                    <tr key={index} className="bg-white/65 transition-colors hover:bg-cyan-500/5 dark:bg-transparent dark:hover:bg-slate-900/50">
+                      <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-100">{item.name}</td>
+                      <td className="px-4 py-3 text-center text-slate-600 dark:text-slate-300">{item.quantity}</td>
+                      <td className="px-4 py-3 text-right font-mono text-slate-600 dark:text-slate-300">{safeCurrency(item.unit_price)}</td>
+                      <td className="px-4 py-3 text-right font-mono font-semibold text-slate-900 dark:text-slate-100">{safeCurrency(item.total)}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
+                      {t('results.noItems')}
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={4} className="px-4 py-4 text-center text-neutral-500">
-                    No line items extracted
-                  </td>
-                </tr>
-              )}
-            </tbody>
-            <tfoot className="bg-neutral-50 font-semibold">
-              <tr>
-                <td colSpan={3} className="px-4 py-3 text-right text-neutral-700">Grand Total</td>
-                <td className="px-4 py-3 text-right text-xl text-primary">
-                  {safeCurrency(data.grand_total)}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {data.items_summary && (
+            <div className="mt-4 rounded-[24px] border border-dashed border-cyan-500/25 bg-cyan-500/5 px-4 py-4 text-sm text-slate-600 dark:text-slate-300">
+              <span className="font-semibold text-slate-800 dark:text-slate-100">{t('results.summary')}</span> {data.items_summary}
+            </div>
+          )}
         </div>
-      </div>
 
-      {/* Summary */}
-      {data.items_summary && (
-        <div className="mb-8 bg-neutral-50 rounded-2xl px-4 py-3 text-sm text-neutral-600">
-          <span className="font-medium text-neutral-700">Summary:</span> {data.items_summary}
+        <div className="space-y-4 rounded-[28px] border border-slate-200/70 bg-white/72 p-5 dark:border-slate-800/80 dark:bg-slate-950/45">
+          <div className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">{t('results.specSheet')}</div>
+          {specFields.map(({ label, value, valueClass }) => (
+            <div key={label} className="rounded-2xl border border-slate-200/70 bg-slate-50/80 px-4 py-3 dark:border-slate-800/80 dark:bg-slate-900/55">
+              <div className="text-[11px] uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">{label}</div>
+              <div className={`mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100 ${valueClass || ''}`}>{value}</div>
+            </div>
+          ))}
+
+          <div className="grid gap-3 pt-2">
+            {onViewInvoice && (
+              <button
+                onClick={onViewInvoice}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-cyan-500 px-5 py-3 text-sm font-semibold text-slate-950 transition-colors hover:bg-cyan-400"
+              >
+                <Eye className="h-4 w-4" />
+                {t('results.view')}
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            )}
+
+            <button
+              onClick={onSave}
+              disabled={isSaving}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200/70 bg-white/80 px-5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:text-cyan-600 disabled:opacity-70 dark:border-slate-800/80 dark:bg-slate-950/50 dark:text-slate-200 dark:hover:text-cyan-300"
+            >
+              <Save className="h-4 w-4" />
+              {isSaving ? t('results.saving') : t('results.save')}
+            </button>
+
+            <button
+              onClick={onDownload}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200/70 bg-white/80 px-5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:text-cyan-600 dark:border-slate-800/80 dark:bg-slate-950/50 dark:text-slate-200 dark:hover:text-cyan-300"
+            >
+              <Download className="h-4 w-4" />
+              {t('results.downloadPdf')}
+            </button>
+
+            <button
+              onClick={onUploadAnother}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200/70 bg-white/80 px-5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:text-cyan-600 dark:border-slate-800/80 dark:bg-slate-950/50 dark:text-slate-200 dark:hover:text-cyan-300"
+            >
+              <RefreshCcw className="h-4 w-4" />
+              {t('results.uploadAnother')}
+            </button>
+          </div>
         </div>
-      )}
-
-      {/* Action Buttons */}
-      <div className="flex flex-wrap gap-3">
-        {onViewInvoice && (
-          <button
-            onClick={onViewInvoice}
-            className="flex-1 min-w-[140px] flex items-center justify-center gap-2 bg-primary hover:bg-cyan-600 text-white px-6 py-3 rounded-2xl font-semibold transition-colors"
-          >
-            <FaEye className="w-4 h-4" />
-            View Invoice
-          </button>
-        )}
-
-        <button
-          onClick={onSave}
-          disabled={isSaving}
-          className="flex-1 min-w-[140px] flex items-center justify-center gap-2 bg-white border border-neutral-300 hover:bg-neutral-50 disabled:opacity-70 text-neutral-700 px-6 py-3 rounded-2xl font-medium transition-colors"
-        >
-          <FaSave className="w-4 h-4" />
-          {isSaving ? 'Saving...' : 'Save Invoice'}
-        </button>
-
-        <button
-          onClick={onDownload}
-          className="flex items-center justify-center gap-2 bg-white border border-neutral-300 hover:bg-neutral-50 text-neutral-700 px-6 py-3 rounded-2xl font-medium transition-colors"
-        >
-          <FaDownload className="w-4 h-4" />
-          Download
-        </button>
-
-        <button
-          onClick={onUploadAnother}
-          className="flex items-center justify-center gap-2 bg-white border border-neutral-300 hover:bg-neutral-50 text-neutral-700 px-6 py-3 rounded-2xl font-medium transition-colors"
-        >
-          <FaRedo className="w-4 h-4" />
-          Upload Another
-        </button>
       </div>
     </div>
   );

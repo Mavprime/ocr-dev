@@ -3,12 +3,14 @@ import { useInvoiceList } from '../hooks/useInvoiceList';
 import FilterBar from '../components/FilterBar';
 import InvoiceTable from '../components/InvoiceTable';
 import DetailsModal from '../components/DetailsModal';
+import { useLanguage } from '../components/LanguageProvider';
 import { Invoice } from '../types/invoice';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import { FaSync } from 'react-icons/fa';
+import { RefreshCcw, ShieldCheck, WalletCards } from 'lucide-react';
 
 const Invoices: React.FC = () => {
+  const { t, textClass, isAmharic } = useLanguage();
   const {
     filteredInvoices,
     isLoading,
@@ -71,7 +73,6 @@ const Invoices: React.FC = () => {
     deleteInvoice(id);
   };
 
-  // Skeleton loading state
   const SkeletonRow = () => (
     <tr>
       <td className="px-6 py-4"><div className="skeleton h-4 w-24 rounded" /></td>
@@ -85,20 +86,50 @@ const Invoices: React.FC = () => {
     </tr>
   );
 
+  const skeletonHeaders = [
+    'table.date',
+    'table.vendor',
+    'table.taxIds',
+    'table.subtotal',
+    'table.vat',
+    'table.grandTotal',
+    'table.items',
+    'table.source',
+    'table.actions',
+  ] as const;
+
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
+    <div className={textClass}>
+      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-neutral-900">Your Invoices</h1>
-          <p className="text-neutral-500 mt-0.5">All processed invoices in one place</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">{t('invoices.title')}</h1>
+          <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">{t('invoices.subtitle')}</p>
         </div>
 
-        <button
-          onClick={refetch}
-          className="flex items-center gap-2 text-sm px-4 py-2 bg-white border border-neutral-300 rounded-2xl hover:bg-neutral-50"
-        >
-          <FaSync className="w-3.5 h-3.5" /> Refresh
-        </button>
+        <div className="flex flex-wrap gap-3">
+          <div className="ui-surface rounded-xl px-3 py-2.5 text-sm">
+            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+              <WalletCards className="h-4 w-4 text-cyan-600 dark:text-cyan-300" />
+              <span>{t('invoices.totalVisible')}</span>
+            </div>
+            <div className="mt-1 font-semibold text-slate-900 dark:text-slate-100">
+              {t('invoices.count', { count: filteredInvoices.length })}
+            </div>
+          </div>
+          <div className="ui-surface rounded-xl px-3 py-2.5 text-sm">
+            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+              <ShieldCheck className="h-4 w-4 text-cyan-600 dark:text-cyan-300" />
+              <span>{t('invoices.compliance')}</span>
+            </div>
+            <div className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{t('invoices.complianceValue')}</div>
+          </div>
+          <button
+            onClick={refetch}
+            className="inline-flex items-center gap-2 rounded-2xl border border-slate-200/70 bg-white/80 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:text-cyan-600 dark:border-slate-800/80 dark:bg-slate-950/50 dark:text-slate-200 dark:hover:text-cyan-300"
+          >
+            <RefreshCcw className="h-3.5 w-3.5" /> {t('invoices.refresh')}
+          </button>
+        </div>
       </div>
 
       <FilterBar
@@ -114,30 +145,49 @@ const Invoices: React.FC = () => {
       />
 
       {isLoading ? (
-        <div className="bg-white border border-neutral-200 rounded-3xl overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-neutral-50">
-              <tr>
-                <th className="text-left px-6 py-4">Date</th>
-                <th className="text-left px-6 py-4">Vendor</th>
-                <th className="text-left px-4 py-4">TIN</th>
-                <th className="text-left px-4 py-4">FS_No</th>
-                <th className="text-right px-6 py-4">Total</th>
-                <th className="text-left px-6 py-4">Items</th>
-                <th className="text-center px-6 py-4">Source</th>
-                <th className="text-right px-6 py-4">Actions</th>
+        <div className="invoice-table-shell ui-surface overflow-hidden rounded-2xl">
+          <div className="table-container">
+          <table className={`invoice-table text-sm ${isAmharic ? '' : 'w-full'}`}>
+            <colgroup>
+              <col className="col-date w-[7.5rem]" />
+              <col className="col-vendor" />
+              <col className="col-tax" />
+              <col className="col-money" />
+              <col className="col-money" />
+              <col className="col-money" />
+              <col className="col-items" />
+              <col className="col-source w-[5.5rem]" />
+              <col className="col-actions w-[7.5rem]" />
+            </colgroup>
+            <thead>
+              <tr className="border-b border-slate-200/90 bg-slate-50/95 dark:border-slate-700/90 dark:bg-slate-800/95">
+                {skeletonHeaders.map((key) => (
+                  <th
+                    key={key}
+                    className={`invoice-table-th ${isAmharic ? 'i18n-am-header' : ''} ${
+                      key === 'table.subtotal' || key === 'table.vat' || key === 'table.grandTotal' || key === 'table.actions'
+                        ? 'invoice-table-th--right'
+                        : key === 'table.source'
+                          ? 'invoice-table-th--center'
+                          : ''
+                    } ${key === 'table.actions' ? 'pr-5' : ''}`}
+                  >
+                    <span className="inline-flex flex-wrap items-center gap-0.5 leading-snug">{t(key)}</span>
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)}
             </tbody>
           </table>
+          </div>
         </div>
       ) : error ? (
-        <div className="bg-red-50 border border-red-200 rounded-3xl p-8 text-center">
-          <p className="text-red-700">Failed to load invoices</p>
-          <p className="text-sm text-red-600 mt-1">{error}</p>
-          <button onClick={refetch} className="mt-4 text-sm underline">Retry</button>
+        <div className="ui-surface rounded-2xl p-5 text-center">
+          <p className="font-semibold text-red-600 dark:text-red-300">{t('invoices.loadFailed')}</p>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{error}</p>
+          <button onClick={refetch} className="mt-4 text-sm text-cyan-600 underline dark:text-cyan-300">{t('invoices.retry')}</button>
         </div>
       ) : (
         <InvoiceTable
@@ -151,9 +201,9 @@ const Invoices: React.FC = () => {
         />
       )}
 
-      <DetailsModal 
-        invoice={selectedInvoice} 
-        onClose={() => setSelectedInvoice(null)} 
+      <DetailsModal
+        invoice={selectedInvoice}
+        onClose={() => setSelectedInvoice(null)}
       />
     </div>
   );

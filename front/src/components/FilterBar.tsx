@@ -1,5 +1,7 @@
 import React from 'react';
-import { FaSearch, FaTimes } from 'react-icons/fa';
+import { Search, X } from 'lucide-react';
+
+import { useLanguage } from './LanguageProvider';
 
 interface FilterBarProps {
   searchTerm: string;
@@ -24,54 +26,58 @@ const FilterBar: React.FC<FilterBarProps> = ({
   filteredCount,
   onClear,
 }) => {
+  const { t, textClass } = useLanguage();
+
   return (
-    <div className="bg-white border border-neutral-200 rounded-2xl p-4 mb-6">
-      <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
-        {/* Search */}
+    <div className="ui-surface mb-4 rounded-2xl p-3">
+      <div className="flex flex-col md:flex-row gap-3 items-start md:items-center">
         <div className="relative flex-1 min-w-[220px]">
-          <FaSearch className="absolute left-4 top-3.5 text-neutral-400 w-4 h-4" />
+          <Search className="absolute left-4 top-3.5 h-4 w-4 text-slate-400 dark:text-slate-500" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by vendor or item..."
-            className="w-full pl-11 pr-4 py-2.5 border border-neutral-300 rounded-2xl focus:outline-none focus:border-primary text-sm"
-            aria-label="Search invoices"
+            placeholder={t('filter.search')}
+            className={`w-full rounded-2xl border border-slate-200/70 bg-white/80 py-2.5 pl-11 pr-4 text-sm text-slate-900 outline-none transition focus:border-cyan-400/60 focus:ring-4 focus:ring-cyan-500/10 dark:border-slate-800/80 dark:bg-slate-950/50 dark:text-slate-100 ${textClass}`}
+            aria-label={t('filter.search')}
           />
         </div>
 
-        {/* Date range */}
         <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
           <div>
-            <label className="text-xs text-neutral-500 block mb-1 ml-1">From</label>
+            <label className={`ml-1 mb-1 block text-xs text-slate-500 dark:text-slate-400 ${textClass}`}>
+              {t('filter.from')}
+            </label>
             <input
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="border border-neutral-300 rounded-2xl px-3 py-2 text-sm focus:outline-none focus:border-primary w-full md:w-auto"
+              className="w-full rounded-2xl border border-slate-200/70 bg-white/80 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-cyan-400/60 focus:ring-4 focus:ring-cyan-500/10 md:w-auto dark:border-slate-800/80 dark:bg-slate-950/50 dark:text-slate-100"
             />
           </div>
           <div>
-            <label className="text-xs text-neutral-500 block mb-1 ml-1">To</label>
+            <label className={`ml-1 mb-1 block text-xs text-slate-500 dark:text-slate-400 ${textClass}`}>
+              {t('filter.to')}
+            </label>
             <input
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className="border border-neutral-300 rounded-2xl px-3 py-2 text-sm focus:outline-none focus:border-primary w-full md:w-auto"
+              className="w-full rounded-2xl border border-slate-200/70 bg-white/80 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-cyan-400/60 focus:ring-4 focus:ring-cyan-500/10 md:w-auto dark:border-slate-800/80 dark:bg-slate-950/50 dark:text-slate-100"
             />
           </div>
         </div>
 
         <button
           onClick={onClear}
-          className="flex items-center gap-2 mt-auto px-4 py-2.5 text-sm text-neutral-600 hover:text-neutral-800 border border-neutral-300 rounded-2xl hover:bg-neutral-50 transition"
+          className={`mt-auto inline-flex items-center gap-2 rounded-2xl border border-slate-200/70 bg-white/80 px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:text-cyan-600 dark:border-slate-800/80 dark:bg-slate-950/50 dark:text-slate-300 dark:hover:text-cyan-300 ${textClass}`}
         >
-          <FaTimes className="w-3 h-3" /> Clear
+          <X className="h-3.5 w-3.5" /> {t('filter.clear')}
         </button>
       </div>
 
-      <div className="mt-3 text-xs text-neutral-500 flex items-center gap-2">
-        Showing <span className="font-semibold text-neutral-700">{filteredCount}</span> of {totalCount} invoices
+      <div className={`mt-3 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 ${textClass}`}>
+        {t('filter.showing', { filtered: filteredCount, total: totalCount })}
       </div>
     </div>
   );

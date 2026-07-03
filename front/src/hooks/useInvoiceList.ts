@@ -92,7 +92,7 @@ export const useInvoiceList = (): UseInvoiceListReturn => {
       console.error('Failed to load invoices from Google Sheets:', err);
       setError(
         axios.isAxiosError(err) && !err.response
-          ? 'Could not reach the server. Check the get-invoices webhook URL and that the workflow is active.'
+          ? 'Could not reach the server. Check your connection and try again.'
           : 'Could not load invoice history.'
       );
       setInvoices([]);
