@@ -280,7 +280,7 @@ const Upload: React.FC = () => {
 
       {/* Help text */}
       <div className="mt-8 text-center text-xs text-neutral-500">
-        Supports PDF, JPG and PNG • Up to 10MB • Powered by n8n + AI
+        Supports PDF, JPG and PNG • Up to 10MB • Powered by MagnetAI
       </div>
     </div>
   );
