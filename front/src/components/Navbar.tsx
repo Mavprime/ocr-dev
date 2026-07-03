@@ -36,9 +36,7 @@ const Navbar: React.FC = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 shrink-0" onClick={closeMenu}>
-            <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold text-lg">L</span>
-            </div>
+            <img src="/Alogo.png" alt="Addis Invoice" className="w-9 h-9 rounded-xl object-contain" />
             <div className="hidden sm:block">
               <div className="font-semibold text-lg text-neutral-900 leading-tight">Addis Invoice</div>
               <div className="text-[10px] text-neutral-500 -mt-0.5">Smart OCR for Ethiopia</div>
