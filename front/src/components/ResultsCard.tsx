@@ -20,12 +20,16 @@ const ResultsCard: React.FC<ResultsCardProps> = ({
   onViewInvoice,
   isSaving = false
 }) => {
-  const formatCurrency = (amount: number) => {
+  /** Safely format a value as ETB currency — handles undefined, NaN, and string inputs. */
+  const safeCurrency = (amount: number | string | undefined | null): string => {
+    if (amount == null) return '—';
+    const n = typeof amount === 'number' ? amount : parseFloat(String(amount).replace(/[^0-9.\-]/g, ''));
+    if (!isFinite(n)) return '—';
     return new Intl.NumberFormat('en-ET', {
       style: 'currency',
       currency: 'ETB',
       minimumFractionDigits: 0,
-    }).format(amount);
+    }).format(n);
   };
 
   const formatDate = (dateStr: string) => {
@@ -64,7 +68,7 @@ const ResultsCard: React.FC<ResultsCardProps> = ({
         <div>
           <div className="text-xs uppercase tracking-wider text-neutral-500 font-medium mb-1">TOTAL</div>
           <div className="text-3xl font-bold text-primary amount">
-            {formatCurrency(data.grand_total)}
+            {safeCurrency(data.grand_total)}
           </div>
         </div>
       </div>
@@ -90,10 +94,10 @@ const ResultsCard: React.FC<ResultsCardProps> = ({
                     <td className="px-4 py-3 font-medium text-neutral-800">{item.name}</td>
                     <td className="px-4 py-3 text-center text-neutral-600">{item.quantity}</td>
                     <td className="px-4 py-3 text-right text-neutral-600">
-                      {formatCurrency(item.unit_price)}
+                      {safeCurrency(item.unit_price)}
                     </td>
                     <td className="px-4 py-3 text-right font-semibold text-neutral-900">
-                      {formatCurrency(item.total)}
+                      {safeCurrency(item.total)}
                     </td>
                   </tr>
                 ))
@@ -109,7 +113,7 @@ const ResultsCard: React.FC<ResultsCardProps> = ({
               <tr>
                 <td colSpan={3} className="px-4 py-3 text-right text-neutral-700">Grand Total</td>
                 <td className="px-4 py-3 text-right text-xl text-primary">
-                  {formatCurrency(data.grand_total)}
+                  {safeCurrency(data.grand_total)}
                 </td>
               </tr>
             </tfoot>

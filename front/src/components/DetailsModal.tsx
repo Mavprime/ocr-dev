@@ -21,12 +21,16 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ invoice, onClose }) => {
 
   if (!invoice) return null;
 
-  const formatCurrency = (amount: number) => {
+  /** Safely format a value as ETB currency — handles undefined, NaN, and string inputs. */
+  const safeCurrency = (amount: number | string | undefined | null): string => {
+    if (amount == null) return '—';
+    const n = typeof amount === 'number' ? amount : parseFloat(String(amount).replace(/[^0-9.\-]/g, ''));
+    if (!isFinite(n)) return '—';
     return new Intl.NumberFormat('en-ET', {
       style: 'currency',
       currency: 'ETB',
       minimumFractionDigits: 0,
-    }).format(amount);
+    }).format(n);
   };
 
   const formatDate = (dateStr: string) => {
@@ -54,8 +58,8 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ invoice, onClose }) => {
     const tableData = (invoice.items || []).map(item => [
       item.name,
       item.quantity.toString(),
-      formatCurrency(item.unit_price),
-      formatCurrency(item.total),
+      safeCurrency(item.unit_price),
+      safeCurrency(item.total),
     ]);
 
     (doc as any).autoTable({
@@ -69,7 +73,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ invoice, onClose }) => {
 
     const finalY = (doc as any).lastAutoTable.finalY || 80;
     doc.setFontSize(14);
-    doc.text(`Grand Total: ${formatCurrency(invoice.grand_total)}`, 20, finalY + 15);
+    doc.text(`Grand Total: ${safeCurrency(invoice.grand_total)}`, 20, finalY + 15);
 
     doc.save(`invoice-${invoice.vendor.replace(/\s+/g, '-')}.pdf`);
   };
@@ -96,7 +100,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ invoice, onClose }) => {
             </div>
             <div className="text-right">
               <div className="uppercase text-xs tracking-[1px] text-neutral-500">Total Amount</div>
-              <div className="text-3xl font-bold text-primary">{formatCurrency(invoice.grand_total)}</div>
+              <div className="text-3xl font-bold text-primary">{safeCurrency(invoice.grand_total)}</div>
             </div>
           </div>
 
@@ -106,10 +110,10 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ invoice, onClose }) => {
             <div><span className="text-neutral-500">TIN:</span> {invoice.tin || '-'}</div>
             <div><span className="text-neutral-500">FS No:</span> {invoice.fs_no || '-'}</div>
             {invoice.subtotal != null && (
-              <div><span className="text-neutral-500">Subtotal:</span> {formatCurrency(invoice.subtotal)}</div>
+              <div><span className="text-neutral-500">Subtotal:</span> {safeCurrency(invoice.subtotal)}</div>
             )}
             {invoice.vat_amount != null && (
-              <div><span className="text-neutral-500">VAT:</span> {formatCurrency(invoice.vat_amount)}</div>
+              <div><span className="text-neutral-500">VAT:</span> {safeCurrency(invoice.vat_amount)}</div>
             )}
             <div><span className="text-neutral-500">Items:</span> {invoice.items?.length || 0}</div>
           </div>
@@ -132,8 +136,8 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ invoice, onClose }) => {
                     <tr key={idx}>
                       <td className="px-4 py-3">{item.name}</td>
                       <td className="px-4 py-3 text-center">{item.quantity}</td>
-                      <td className="px-4 py-3 text-right">{formatCurrency(item.unit_price)}</td>
-                      <td className="px-4 py-3 text-right font-medium">{formatCurrency(item.total)}</td>
+                      <td className="px-4 py-3 text-right">{safeCurrency(item.unit_price)}</td>
+                      <td className="px-4 py-3 text-right font-medium">{safeCurrency(item.total)}</td>
                     </tr>
                   ))}
                   {(!invoice.items || invoice.items.length === 0) && (
@@ -143,7 +147,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ invoice, onClose }) => {
                 <tfoot>
                   <tr className="bg-neutral-50 font-semibold">
                     <td colSpan={3} className="px-4 py-3 text-right">Grand Total</td>
-                    <td className="px-4 py-3 text-right text-lg text-primary">{formatCurrency(invoice.grand_total)}</td>
+                    <td className="px-4 py-3 text-right text-lg text-primary">{safeCurrency(invoice.grand_total)}</td>
                   </tr>
                 </tfoot>
               </table>
