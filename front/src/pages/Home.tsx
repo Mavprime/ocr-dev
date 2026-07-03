@@ -10,7 +10,7 @@ import {
    Constants
    ─────────────────────────────────────────────────────────────────────────── */
 
-const WHATSAPP_NUMBER = '0988817281';
+const WHATSAPP_NUMBER = '251978407848';
 const WHATSAPP_FREE_TRIAL_MSG = encodeURIComponent(
   'Hi, I want to try Addis Invoice free',
 );

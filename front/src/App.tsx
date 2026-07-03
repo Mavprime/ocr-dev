@@ -1,7 +1,8 @@
 import React from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
-import { FaTelegramPlane, FaPhoneAlt } from 'react-icons/fa';
+import { FaTelegramPlane, FaWhatsapp } from 'react-icons/fa';
 import Navbar from './components/Navbar';
+import FloatingSupport from './components/FloatingSupport';
 import Home from './pages/Home';
 import Upload from './pages/Upload';
 import Invoices from './pages/Invoices';
@@ -33,9 +34,7 @@ const App: React.FC = () => {
             {/* Brand */}
             <div className="md:col-span-2">
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">L</span>
-                </div>
+                <img src="/Alogo.png" alt="Addis Invoice" className="w-9 h-9 rounded-xl object-contain" />
                 <span className="text-white font-semibold text-lg">Addis Invoice</span>
               </div>
               <p className="text-sm max-w-xs leading-relaxed">
@@ -65,7 +64,7 @@ const App: React.FC = () => {
             <div>
               <h4 className="text-white font-semibold text-sm mb-4">Company</h4>
               <ul className="space-y-2 text-sm">
-                <li><a href="tel:0988817281" className="hover:text-white transition-colors">Contact</a></li>
+                <li><a href="https://wa.me/251978407848" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Contact</a></li>
                 <li><Link to="/upload" className="hover:text-white transition-colors">Upload</Link></li>
                 <li><Link to="/invoices" className="hover:text-white transition-colors">Invoices</Link></li>
                 <li><span className="hover:text-white transition-colors cursor-default">Privacy</span></li>
@@ -81,25 +80,32 @@ const App: React.FC = () => {
             </div>
             <div className="flex items-center gap-4">
               <a
-                href="https://t.me/addisinvoice"
+                href="https://t.me/AddisInvoiceSupportBot"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full border border-neutral-700 flex items-center justify-center hover:border-primary hover:text-primary transition-colors"
-                aria-label="Telegram"
+                className="w-9 h-9 rounded-full border border-neutral-700 flex items-center justify-center hover:border-[#2AABEE] hover:text-[#2AABEE] transition-colors"
+                aria-label="Telegram Support"
+                title="Telegram Support Bot"
               >
                 <FaTelegramPlane className="w-4 h-4" />
               </a>
               <a
-                href="tel:0988817281"
-                className="w-9 h-9 rounded-full border border-neutral-700 flex items-center justify-center hover:border-primary hover:text-primary transition-colors"
-                aria-label="Phone"
+                href="https://wa.me/251978407848"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full border border-neutral-700 flex items-center justify-center hover:border-[#25D366] hover:text-[#25D366] transition-colors"
+                aria-label="WhatsApp Business"
+                title="WhatsApp Business"
               >
-                <FaPhoneAlt className="w-4 h-4" />
+                <FaWhatsapp className="w-4 h-4" />
               </a>
             </div>
           </div>
         </div>
       </footer>
+
+      {/* Floating support widget */}
+      <FloatingSupport />
     </div>
   );
 };
