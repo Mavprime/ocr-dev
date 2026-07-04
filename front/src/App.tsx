@@ -76,7 +76,7 @@ const App: React.FC = () => {
                     Telegram
                   </a>
                   <a
-                    href="https://wa.me/251978407848"
+                    href="https://wa.me/251701681571"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 rounded-2xl border border-slate-200/70 bg-white/80 px-3 py-2 text-sm text-slate-700 transition-colors hover:text-cyan-600 dark:border-slate-800/80 dark:bg-slate-950/50 dark:text-slate-300 dark:hover:text-cyan-300"

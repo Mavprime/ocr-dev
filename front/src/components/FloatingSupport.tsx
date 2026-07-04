@@ -5,7 +5,7 @@ import type { TranslationKey } from '../lib/i18n/translations';
 import { useLanguage } from './LanguageProvider';
 
 const TELEGRAM_URL = 'https://t.me/AddisInvoiceSupportBot';
-const WHATSAPP_URL = 'https://wa.me/251978407848';
+const WHATSAPP_URL = 'https://wa.me/251701681571';
 
 const channels: { labelKey: TranslationKey; url: string; icon: typeof Send }[] = [
   { labelKey: 'support.telegram', url: TELEGRAM_URL, icon: Send },

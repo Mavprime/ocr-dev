@@ -220,7 +220,7 @@ const Upload: React.FC = () => {
                     {t('upload.limitDesc')}
                   </p>
                   <a
-                    href="https://wa.me/251978407848"
+                    href="https://wa.me/251701681571"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 rounded-2xl bg-cyan-500 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"

@@ -30,7 +30,7 @@ export interface NavGroup {
 }
 
 const WHATSAPP_SIGNUP =
-  'https://wa.me/251978407848?text=' +
+  'https://wa.me/251701681571?text=' +
   encodeURIComponent('Hi, I want to start a free trial of Addis Invoice');
 
 export const navGroupDefs: NavGroup[] = [
@@ -64,7 +64,7 @@ export const navGroupDefs: NavGroup[] = [
       {
         labelKey: 'nav.whatsapp',
         type: 'external',
-        to: 'https://wa.me/251978407848',
+        to: 'https://wa.me/251701681571',
         icon: MessageCircle,
       },
     ],

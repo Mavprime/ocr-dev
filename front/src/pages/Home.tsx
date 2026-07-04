@@ -18,7 +18,7 @@ import { useLanguage } from '../components/LanguageProvider';
 import { scrollToHash } from '../lib/navigation';
 import { TranslationKey } from '../lib/i18n/translations';
 
-const WHATSAPP_NUMBER = '251978407848';
+const WHATSAPP_NUMBER = '251701681571';
 const WHATSAPP_FREE_TRIAL_MSG = encodeURIComponent(
   'Hi, I want to try Addis Invoice free',
 );
