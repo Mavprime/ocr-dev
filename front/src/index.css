@@ -6,6 +6,14 @@
   --primary: #06B6D4;
   --success: #10B981;
   --error: #EF4444;
+  --canvas: #f8fafc;
+  --surface: rgba(255, 255, 255, 0.92);
+  --surface-elevated: #ffffff;
+  --border-color: rgba(148, 163, 184, 0.22);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --shadow-soft: 0 20px 60px rgba(15, 23, 42, 0.08);
 }
 
 html {
@@ -13,51 +21,137 @@ html {
 }
 
 body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* Upload zone styles */
-.upload-zone {
-  border: 2px dashed #D1D5DB;
-  transition: all 0.2s ease;
+:root.dark {
+  --canvas: #090d16;
+  --surface: rgba(15, 23, 42, 0.68);
+  --surface-elevated: rgba(15, 23, 42, 0.88);
+  --border-color: rgba(30, 41, 59, 0.8);
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --shadow-soft: 0 24px 80px rgba(2, 6, 23, 0.45);
 }
 
-.upload-zone.dragover {
-  border-color: #06B6D4;
-  background-color: #ECFEFF;
+@layer base {
+  html {
+    @apply bg-slate-50 text-slate-900 antialiased;
+  }
+
+  html.dark {
+    @apply bg-slate-950 text-slate-100;
+  }
+
+  body {
+    @apply bg-[var(--canvas)] text-[var(--text-primary)] font-sans transition-colors duration-300;
+  }
+
+  * {
+    @apply border-[color:var(--border-color)];
+  }
+
+  ::selection {
+    @apply bg-cyan-400/30 text-slate-950;
+  }
+
+  html.dark ::selection {
+    @apply text-slate-50;
+  }
+
+  input,
+  button,
+  textarea,
+  select {
+    font: inherit;
+  }
 }
 
-.upload-zone:hover {
-  border-color: #06B6D4;
-}
+@layer components {
+  .app-shell {
+    @apply min-h-screen transition-colors duration-300;
+    background: var(--canvas);
+    color: var(--text-primary);
+  }
 
-/* Card and table styles */
-.invoice-card {
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-}
+  .ui-surface {
+    @apply border backdrop-blur-md transition-colors duration-300;
+    background: var(--surface);
+    border-color: var(--border-color);
+    box-shadow: var(--shadow-soft);
+  }
 
-.table-container {
-  overflow-x: auto;
-}
+  .ui-surface-solid {
+    @apply border transition-colors duration-300;
+    background: var(--surface-elevated);
+    border-color: var(--border-color);
+    box-shadow: var(--shadow-soft);
+  }
 
-th {
-  font-weight: 600;
-  color: #374151;
-}
+  .ui-grid {
+    background-image:
+      linear-gradient(to right, rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
 
-td {
-  color: #374151;
-}
+  .upload-zone {
+    @apply transition-all duration-300;
+    border: 1px dashed rgba(34, 211, 238, 0.35);
+  }
 
-/* Modal */
-.modal {
-  animation: modalPop 0.2s ease-out;
+  .upload-zone.dragover {
+    border-color: rgba(34, 211, 238, 0.92);
+    background: rgba(34, 211, 238, 0.08);
+    box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.15), 0 30px 80px rgba(6, 182, 212, 0.14);
+  }
+
+  .invoice-card {
+    box-shadow: var(--shadow-soft);
+  }
+
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .invoice-table-th {
+    @apply px-4 py-3.5 text-left text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-100;
+  }
+
+  .invoice-table-th--right {
+    @apply text-right;
+  }
+
+  .invoice-table-th--center {
+    @apply text-center;
+  }
+
+  .modal {
+    animation: modalPop 0.22s ease-out;
+  }
+
+  .progress-bar {
+    transition: width 0.3s ease;
+  }
+
+  .skeleton {
+    background: linear-gradient(90deg, rgba(226, 232, 240, 0.9) 25%, rgba(203, 213, 225, 0.9) 50%, rgba(226, 232, 240, 0.9) 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+  }
+
+  html.dark .skeleton {
+    background: linear-gradient(90deg, rgba(30, 41, 59, 0.95) 25%, rgba(51, 65, 85, 0.95) 50%, rgba(30, 41, 59, 0.95) 75%);
+    background-size: 200% 100%;
+  }
 }
 
 @keyframes modalPop {
   from {
     opacity: 0;
-    transform: scale(0.95) translateY(10px);
+    transform: scale(0.97) translateY(14px);
   }
   to {
     opacity: 1;
@@ -65,35 +159,251 @@ td {
   }
 }
 
-/* Toast customization */
-.toast-success {
-  background: #10B981 !important;
-  color: white !important;
-}
-
-.toast-error {
-  background: #EF4444 !important;
-  color: white !important;
-}
-
-/* Progress bar */
-.progress-bar {
-  transition: width 0.3s ease;
-}
-
-/* Skeleton loader */
-.skeleton {
-  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
-  background-size: 200% 100%;
-  animation: loading 1.5s infinite;
-}
-
 @keyframes loading {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
 
-/* Mobile optimizations */
+@keyframes driftSlow {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -12px, 0); }
+}
+
+@keyframes driftSide {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(10px, -8px, 0); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.55; transform: scale(0.98); }
+  50% { opacity: 1; transform: scale(1.02); }
+}
+
+@keyframes revealUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gridFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-drift-slow {
+  animation: driftSlow 8s ease-in-out infinite;
+}
+
+.animate-drift-side {
+  animation: driftSide 10s ease-in-out infinite;
+}
+
+.animate-glow-pulse {
+  animation: glowPulse 3.6s ease-in-out infinite;
+}
+
+.animate-reveal-up {
+  animation: revealUp 0.7s ease-out both;
+}
+
+.animate-grid-fade {
+  animation: gridFade 1s ease-out both;
+}
+
+/* ── Side dock (Linear / Vercel-inspired) ── */
+@keyframes sideDockEnter {
+  from {
+    opacity: 0;
+    transform: translate3d(-28px, 0, 0) scale(0.96);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes sideDockItemEnter {
+  from {
+    opacity: 0;
+    transform: translate3d(-12px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes sideDockGroupEnter {
+  from {
+    opacity: 0;
+    transform: translate3d(-8px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes supportMenuIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes supportPing {
+  0% {
+    transform: scale(1);
+    opacity: 0.45;
+  }
+  70% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+.side-dock-shell {
+  transition: width 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  animation: sideDockEnter 680ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.side-dock-panel {
+  will-change: transform;
+  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.side-dock-shell[data-collapsed='true'] .side-dock-panel {
+  transform: translateX(-2px);
+}
+
+.side-dock-group {
+  animation: sideDockGroupEnter 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.side-dock-item {
+  animation: sideDockItemEnter 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.support-menu-item {
+  animation: supportMenuIn 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-support-ping {
+  animation: supportPing 2.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.side-dock-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(6, 182, 212, 0.35) transparent;
+}
+
+.side-dock-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.side-dock-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(6, 182, 212, 0.35);
+}
+
+.side-dock-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.invoice-table-shell {
+  box-shadow:
+    0 1px 0 rgba(148, 163, 184, 0.12),
+    0 12px 40px rgba(15, 23, 42, 0.06);
+}
+
+html.dark .invoice-table-shell {
+  box-shadow:
+    0 1px 0 rgba(51, 65, 85, 0.5),
+    0 16px 48px rgba(2, 6, 23, 0.35);
+}
+
+html.lang-am body {
+  line-height: 1.65;
+}
+
+.i18n-am {
+  line-height: 1.85;
+  letter-spacing: 0.01em;
+  word-break: break-word;
+}
+
+.i18n-am-header {
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+}
+
+html.lang-am .invoice-table {
+  min-width: 72rem;
+}
+
+html.lang-am .invoice-table th {
+  white-space: normal;
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  vertical-align: bottom;
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+}
+
+html.lang-am .invoice-table .col-vendor {
+  min-width: 11rem;
+}
+
+html.lang-am .invoice-table .col-tax {
+  min-width: 9.5rem;
+}
+
+html.lang-am .invoice-table .col-money {
+  min-width: 7.5rem;
+}
+
+html.lang-am .invoice-table .col-items {
+  min-width: 10rem;
+}
+
+html.lang-am .invoice-table .col-actions {
+  min-width: 7.5rem;
+}
+
+html.lang-am .invoice-table td.col-vendor {
+  min-width: 11rem;
+  max-width: 16rem;
+  word-break: break-word;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .side-dock-shell,
+  .side-dock-group,
+  .side-dock-item,
+  .support-menu-item,
+  .animate-support-ping {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
 @media (max-width: 640px) {
   .invoice-table {
     font-size: 0.875rem;
