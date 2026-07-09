@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react';
 import {
   CircleHelp,
   Coins,
+  Crown,
   Home as HomeIcon,
   Layers,
   MessageCircle,
@@ -40,6 +41,7 @@ export const navGroupDefs: NavGroup[] = [
       { labelKey: 'nav.home', type: 'route', to: '/', icon: HomeIcon },
       { labelKey: 'nav.upload', type: 'route', to: '/upload', icon: Upload },
       { labelKey: 'nav.invoices', type: 'route', to: '/invoices', icon: Receipt },
+      { labelKey: 'nav.upgrade', type: 'route', to: '/upgrade', icon: Crown },
     ],
   },
   {

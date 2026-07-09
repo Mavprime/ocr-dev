@@ -19,6 +19,7 @@ export const translations = {
     'nav.home': 'Home',
     'nav.upload': 'Upload Invoice',
     'nav.invoices': 'My Invoices',
+    'nav.upgrade': 'Upgrade',
     'nav.how': 'How It Works',
     'nav.pricing': 'Pricing',
     'nav.features': 'Features',
@@ -243,6 +244,32 @@ export const translations = {
     'support.whatsapp': 'WhatsApp Business Desk',
     'support.menu': 'Support channels',
 
+    // ── Auth ──
+    'auth.loginTitle': 'Welcome back',
+    'auth.loginSubtitle': 'Sign in to your account to continue',
+    'auth.signupTitle': 'Create your account',
+    'auth.signupSubtitle': 'Start processing invoices in seconds',
+    'auth.email': 'Email',
+    'auth.password': 'Password',
+    'auth.loginButton': 'Sign In',
+    'auth.signupButton': 'Create Account',
+    'auth.guest': 'Guest',
+    'auth.noAccount': "Don't have an account?",
+    'auth.hasAccount': 'Already have an account?',
+
+    // ── Upgrade ──
+    'upgrade.title': 'Upgrade to Premium',
+    'upgrade.subtitle': 'Unlock unlimited invoice processing for 750 ETB/month.',
+    'upgrade.instructions': 'Payment Instructions',
+    'upgrade.amount': '{amount} ETB',
+    'upgrade.paymentMethods': 'Send payment to',
+    'upgrade.uploadReceipt': 'Upload Payment Receipt',
+    'upgrade.uploadHint': 'After completing the transfer, upload a screenshot or PDF of your payment confirmation.',
+    'upgrade.submitPayment': 'Submit Payment Proof',
+    'upgrade.success': 'Payment proof submitted!',
+    'upgrade.pending': 'Payment verification in progress',
+    'upgrade.note': 'We will review your payment and activate your premium account shortly. You will receive a confirmation via email.',
+
     'footer.tagline': 'Invoice Management',
     'footer.desc':
       'Turn paper and PDF invoices into searchable records for Ethiopian businesses — with TIN, VAT, and FS No fields ready for review.',
@@ -265,6 +292,7 @@ export const translations = {
     'nav.home': 'መነሻ',
     'nav.upload': 'ፋክተር ስቀል',
     'nav.invoices': 'የእኔ ፋክተሮች',
+    'nav.upgrade': 'አሳድግ',
     'nav.how': 'እንዴት እንደሚሰራ',
     'nav.pricing': 'ዋጋ',
     'nav.features': 'ባህሪያት',
@@ -488,6 +516,32 @@ export const translations = {
     'support.telegram': 'የቴሌግራም ኦፊሴላዊ ድጋፍ',
     'support.whatsapp': 'የዋትስአፕ ንግድ ድጋፍ',
     'support.menu': 'የድጋፍ መንገዶች',
+
+    // ── Auth ──
+    'auth.loginTitle': 'እንኳን ደህና መጡ',
+    'auth.loginSubtitle': 'ለመቀጠል ወደ መለያዎ ይግቡ',
+    'auth.signupTitle': 'መለያ ይፍጠሩ',
+    'auth.signupSubtitle': 'በሰከንዶች ውስጥ ፋክተሮችን ማቀናበር ይጀምሩ',
+    'auth.email': 'ኢሜይል',
+    'auth.password': 'የይለፍ ቃል',
+    'auth.loginButton': 'ይግቡ',
+    'auth.signupButton': 'መለያ ይፍጠሩ',
+    'auth.guest': 'እንግዳ',
+    'auth.noAccount': 'መለያ የለዎትም?',
+    'auth.hasAccount': 'መለያ አለዎት?',
+
+    // ── Upgrade ──
+    'upgrade.title': 'ወደ ፕሪሚየም ያሳድጉ',
+    'upgrade.subtitle': 'ያልተገደበ የፋክተር ማቀናበርን በ750 ኢት.ብር/ወር ይክፈቱ።',
+    'upgrade.instructions': 'የክፍያ መመሪያዎች',
+    'upgrade.amount': '{amount} ኢት.ብር',
+    'upgrade.paymentMethods': 'ክፍያ ይላኩ ለ',
+    'upgrade.uploadReceipt': 'የክፍያ ደረሰኝ ይስቀሉ',
+    'upgrade.uploadHint': 'ዝውውሩን ከጨረሱ በኋላ የክፍያ ማረጋገጫ ቅጽበታዊ ገጽ እይታ ወይም PDF ይስቀሉ።',
+    'upgrade.submitPayment': 'የክፍያ ማረጋገጫ ያስገቡ',
+    'upgrade.success': 'የክፍያ ማረጋገጫ ተልኳል!',
+    'upgrade.pending': 'የክፍያ ማረጋገጥ በሂደት ላይ',
+    'upgrade.note': 'ክፍያዎን ገምግመን የፕሪሚየም መለያዎን በቅርቡ እናነቃለን። በኢሜይል ማረጋገጫ ይደርስዎታል።',
 
     'footer.tagline': 'የፋክተር አስተዳደር',
     'footer.desc':

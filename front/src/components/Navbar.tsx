@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, Moon, SunMedium, X } from 'lucide-react';
+import { LogOut, Menu, Moon, SunMedium, User, X } from 'lucide-react';
 
 import { navGroupDefs, scrollToSection } from '../lib/navigation';
 import LanguageToggle from './LanguageToggle';
 import { useLanguage } from './LanguageProvider';
 import { useTheme } from './ThemeProvider';
+import { useAuth } from './AuthProvider';
 
 const Navbar: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const { t, textClass } = useLanguage();
+  const { user, isAnonymous, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -40,6 +42,54 @@ const Navbar: React.FC = () => {
 
         <div className="flex items-center gap-2">
           <LanguageToggle />
+
+          {user && !isAnonymous ? (
+            /* Permanent account — show email + logout */
+            <div className="hidden items-center gap-2 sm:flex">
+              <span className="flex items-center gap-1.5 rounded-xl border border-slate-200/70 bg-white/80 px-2.5 py-1.5 text-xs text-slate-600 dark:border-slate-800/80 dark:bg-slate-950/50 dark:text-slate-300">
+                <User className="h-3 w-3 text-cyan-500" />
+                <span className="max-w-[120px] truncate">{user.email}</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => signOut()}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200/70 bg-white/82 text-slate-700 shadow-sm transition-all hover:text-red-500 dark:border-slate-800/80 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:text-red-400"
+                aria-label="Sign out"
+                title="Sign out"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            </div>
+          ) : user && isAnonymous ? (
+            /* Anonymous guest — encourage account creation */
+            <div className="hidden items-center gap-1.5 sm:flex">
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                {t('auth.guest')}
+              </span>
+              <Link
+                to="/signup"
+                className="rounded-xl bg-cyan-500 px-3 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
+              >
+                {t('auth.signupButton')}
+              </Link>
+            </div>
+          ) : (
+            /* Fallback — still loading or edge case */
+            <div className="hidden items-center gap-1.5 sm:flex">
+              <Link
+                to="/login"
+                className="rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:text-cyan-600 dark:text-slate-300 dark:hover:text-cyan-300"
+              >
+                {t('auth.loginButton')}
+              </Link>
+              <Link
+                to="/signup"
+                className="rounded-xl bg-cyan-500 px-3 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
+              >
+                {t('auth.signupButton')}
+              </Link>
+            </div>
+          )}
 
           <button
             type="button"

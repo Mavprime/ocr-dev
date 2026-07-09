@@ -2,7 +2,8 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { InvoiceData, JobStatus } from '../types/invoice';
-import api, { getUserId } from '../lib/api';
+import api from '../lib/api';
+import supabase from '../lib/supabaseClient';
 
 // Webhook trigger path appended to VITE_API_URL (or its localhost fallback).
 const UPLOAD_PATH = 'a2bdee7f-0dcd-490b-891d-2a5d182ebabc';
@@ -15,7 +16,7 @@ const UPLOAD_PATH = 'a2bdee7f-0dcd-490b-891d-2a5d182ebabc';
 const PROCESS_TIMEOUT = 150000; // 150s for upload + OCR + AI extraction
 
 interface UseInvoiceUploadReturn {
-  uploadFile: (file: File) => void;
+  uploadFile: (file: File) => Promise<void>;
   status: JobStatus;
   progress: number;
   data: InvoiceData | null;
@@ -57,6 +58,31 @@ const classifyResponse = (payload: any): UploadResponse => {
   return { kind: 'unknown' };
 };
 
+/**
+ * After OCR extraction succeeds, persist the invoice row into Supabase
+ * so it shows up in the user's invoice history.
+ *
+ * No user_id is passed — RLS scopes the insert to the authenticated user.
+ */
+const saveInvoiceToSupabase = async (data: InvoiceData): Promise<void> => {
+  const { error: insertError } = await supabase
+    .from('invoices')
+    .insert({
+      vendor: data.vendor,
+      date: data.date,
+      grand_total: data.grand_total,
+      items_summary: data.items_summary,
+      items: data.items,
+      source: data.source || 'web',
+    });
+
+  if (insertError) {
+    console.error('Failed to save invoice to Supabase:', insertError);
+    // Don't throw — the OCR succeeded, it just wasn't persisted locally.
+    // The n8n workflow still wrote to Google Sheets as a fallback.
+  }
+};
+
 export const useInvoiceUpload = (): UseInvoiceUploadReturn => {
   const [status, setStatus] = useState<JobStatus>('idle');
   const [progress, setProgress] = useState(0);
@@ -74,7 +100,7 @@ export const useInvoiceUpload = (): UseInvoiceUploadReturn => {
     };
   }, []);
 
-  const uploadFile = useCallback((file: File) => {
+  const uploadFile = useCallback(async (file: File) => {
     // Validation
     const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
     if (!validTypes.includes(file.type)) {
@@ -97,9 +123,12 @@ export const useInvoiceUpload = (): UseInvoiceUploadReturn => {
     setData(null);
     setError(null);
 
+    // Fetch the active session access token for bearer auth
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('user_id', getUserId());
 
     const controller = new AbortController();
     abortRef.current = controller;
@@ -107,6 +136,7 @@ export const useInvoiceUpload = (): UseInvoiceUploadReturn => {
     api.post(UPLOAD_PATH, formData, {
       timeout: PROCESS_TIMEOUT,
       signal: controller.signal,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       onUploadProgress: (progressEvent) => {
         if (!mountedRef.current) return;
         if (progressEvent.total) {
@@ -131,6 +161,9 @@ export const useInvoiceUpload = (): UseInvoiceUploadReturn => {
           setData(result.data);
           setStatus('completed');
           toast.success('Invoice extracted successfully!', { icon: '✅', duration: 3000 });
+
+          // Persist the extracted invoice to Supabase (RLS handles user scoping)
+          saveInvoiceToSupabase(result.data);
         } else {
           setStatus('failed');
           const errMsg =

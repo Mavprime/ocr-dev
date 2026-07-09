@@ -1,10 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
-import axios from 'axios';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Invoice } from '../types/invoice';
-import api, { getUserId } from '../lib/api';
-
-// Webhook trigger path appended to VITE_API_URL (or its localhost fallback).
-const INVOICES_PATH = 'invoices-history';
+import supabase from '../lib/supabaseClient';
 
 const MAX_HISTORY = 15;
 
@@ -16,7 +12,7 @@ const parseNumeric = (v: any): number | undefined => {
   return isFinite(n) ? n : undefined;
 };
 
-/** Map a raw row (formatted by n8n, or a bare Google Sheet row) into our Invoice shape. */
+/** Map a raw database row into our Invoice shape. */
 const normalizeInvoice = (raw: any, idx: number): Invoice => {
   const grand =
     raw.grand_total ?? raw['Total Amount'] ?? raw.total ?? 0;
@@ -68,42 +64,41 @@ export const useInvoiceList = (): UseInvoiceListReturn => {
   const [sortBy, setSortBy] = useState<'date' | 'vendor' | 'amount'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
-  const fetchInvoices = async () => {
+  const fetchInvoices = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await api.get(`${INVOICES_PATH}?userId=${getUserId()}`, { timeout: 20000 });
+      // RLS scopes this to the authenticated user automatically —
+      // no explicit user_id filter needed.
+      const { data, error: supabaseError } = await supabase
+        .from('invoices')
+        .select('*')
+        .order('date', { ascending: false })
+        .limit(MAX_HISTORY);
 
-      // n8n may return a bare array, { data: [...] }, or — when the sheet has a
-      // single row — a bare object. Normalize all of these to an array.
-      const body = response.data;
-      const rows: any[] = Array.isArray(body)
-        ? body
-        : Array.isArray(body?.data)
-        ? body.data
-        : body && typeof body === 'object' && (body.vendor !== undefined || body.Vendor !== undefined)
-        ? [body]
-        : [];
+      if (supabaseError) {
+        console.error('Failed to load invoices from Supabase:', supabaseError);
+        setError('Could not load invoice history.');
+        setInvoices([]);
+        return;
+      }
 
+      const rows: any[] = Array.isArray(data) ? data : [];
       const normalized = rows.map(normalizeInvoice).slice(0, MAX_HISTORY);
       setInvoices(normalized);
     } catch (err) {
-      console.error('Failed to load invoices from Google Sheets:', err);
-      setError(
-        axios.isAxiosError(err) && !err.response
-          ? 'Could not reach the server. Check your connection and try again.'
-          : 'Could not load invoice history.'
-      );
+      console.error('Failed to load invoices:', err);
+      setError('Could not load invoice history.');
       setInvoices([]);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchInvoices();
-  }, []);
+  }, [fetchInvoices]);
 
   // Filtering and Sorting
   const filteredInvoices = useMemo(() => {
@@ -166,8 +161,8 @@ export const useInvoiceList = (): UseInvoiceListReturn => {
     fetchInvoices();
   };
 
-  // Hides the row from the current view only. The Google Sheet remains the source of
-  // truth, so a Refresh will bring it back unless you also delete the row in Sheets.
+  // Hides the row from the current view only. Supabase remains the source of
+  // truth, so a Refresh will bring it back unless the row is also deleted in DB.
   const deleteInvoice = (id: string) => {
     setInvoices(prev => prev.filter(inv => inv.id !== id));
   };

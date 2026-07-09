@@ -1,13 +1,39 @@
 import React from 'react';
-import { Routes, Route, Link } from 'react-router-dom';
+import { Routes, Route, Link, Navigate } from 'react-router-dom';
 import { MessageCircleMore, Send } from 'lucide-react';
 import Navbar from './components/Navbar';
 import FloatingSupport from './components/FloatingSupport';
 import SideDock from './components/SideDock';
 import { useLanguage } from './components/LanguageProvider';
+import { useAuth } from './components/AuthProvider';
 import Home from './pages/Home';
 import Upload from './pages/Upload';
 import Invoices from './pages/Invoices';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import Upgrade from './pages/Upgrade';
+
+/**
+ * Wraps protected routes. If the user is not authenticated, redirect to /login.
+ * Shows a centered spinner while the session is being restored from storage.
+ */
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-cyan-500/30 border-t-cyan-500" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
+};
 
 const App: React.FC = () => {
   const { t, textClass } = useLanguage();
@@ -20,15 +46,28 @@ const App: React.FC = () => {
         <div className="pointer-events-none absolute inset-0 ui-grid opacity-70 dark:opacity-30" />
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/upgrade" element={
+            <ProtectedRoute>
+              <div className="relative z-10 mx-auto max-w-3xl px-4 py-10 md:px-6">
+                <Upgrade />
+              </div>
+            </ProtectedRoute>
+          } />
           <Route path="/upload" element={
-            <div className="relative z-10 mx-auto max-w-6xl px-4 py-10 md:px-6">
-              <Upload />
-            </div>
+            <ProtectedRoute>
+              <div className="relative z-10 mx-auto max-w-6xl px-4 py-10 md:px-6">
+                <Upload />
+              </div>
+            </ProtectedRoute>
           } />
           <Route path="/invoices" element={
-            <div className="relative z-10 mx-auto max-w-7xl px-4 py-10 md:px-6">
-              <Invoices />
-            </div>
+            <ProtectedRoute>
+              <div className="relative z-10 mx-auto max-w-7xl px-4 py-10 md:px-6">
+                <Invoices />
+              </div>
+            </ProtectedRoute>
           } />
         </Routes>
       </main>

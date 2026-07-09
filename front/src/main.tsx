@@ -5,6 +5,7 @@ import { Toaster } from 'react-hot-toast'
 import App from './App.tsx'
 import { ThemeProvider } from './components/ThemeProvider.tsx'
 import { LanguageProvider } from './components/LanguageProvider.tsx'
+import { AuthProvider } from './components/AuthProvider.tsx'
 import './index.css'
 
 //#region debug-point white-screen-ui-root
@@ -79,6 +80,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <DebugErrorBoundary>
       <LanguageProvider>
         <ThemeProvider>
+          <AuthProvider>
           <BrowserRouter>
             <App />
           <Toaster 
@@ -96,6 +98,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             }}
           />
           </BrowserRouter>
+          </AuthProvider>
         </ThemeProvider>
       </LanguageProvider>
     </DebugErrorBoundary>

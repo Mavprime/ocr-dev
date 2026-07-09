@@ -6,7 +6,7 @@ import ResultsCard from '../components/ResultsCard';
 import DetailsModal from '../components/DetailsModal';
 import { useNavigate } from 'react-router-dom';
 import { Invoice } from '../types/invoice';
-import api from '../lib/api';
+import supabase from '../lib/supabaseClient';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import toast from 'react-hot-toast';
@@ -20,62 +20,26 @@ import {
   Sparkles,
 } from 'lucide-react';
 
+import { useAuth } from '../components/AuthProvider';
 import { useLanguage } from '../components/LanguageProvider';
 
-// Webhook trigger path appended to VITE_API_URL (or its localhost fallback).
-const INVOICES_PATH = 'invoices-history';
-
-const MAX_HISTORY = 15;
-
-/** Safely coerce a raw value (number, string, or null/undefined) into a number or undefined. */
-const parseNumeric = (v: any): number | undefined => {
-  if (v == null) return undefined;
-  if (typeof v === 'number') return isFinite(v) ? v : undefined;
-  const n = parseFloat(String(v).replace(/[^0-9.\-]/g, ''));
-  return isFinite(n) ? n : undefined;
-};
-
-/** Same normalisation as useInvoiceList so the modal gets a proper Invoice shape. */
-const normalizeInvoice = (raw: any, idx: number): Invoice => {
-  const grand = raw.grand_total ?? raw['Total Amount'] ?? raw.total ?? 0;
-  return {
-    id: raw.id || `${raw.date || raw.Date || ''}-${raw.vendor || raw.Vendor || ''}-${idx}`,
-    vendor: raw.vendor ?? raw.Vendor ?? 'Unknown',
-    date: raw.date ?? raw.Date ?? '',
-    grand_total: typeof grand === 'number' ? grand : parseFloat(String(grand).replace(/[^0-9.\-]/g, '')) || 0,
-    items_summary: raw.items_summary ?? raw.Summary ?? '',
-    items: Array.isArray(raw.items) ? raw.items : [],
-    source: raw.source ?? raw.Source ?? 'web',
-    created_at: raw.created_at ?? raw.date ?? raw.Date ?? '',
-    tin: raw.tin ?? raw.TIN ?? undefined,
-    fs_no: raw.fs_no ?? raw.FS_No ?? undefined,
-    subtotal: parseNumeric(raw.subtotal ?? raw.Subtotal),
-    vat_amount: parseNumeric(raw.vat_amount ?? raw.VAT_Amount ?? raw.VAT),
-  };
-};
-
 const fetchLatestInvoice = async (): Promise<Invoice | null> => {
-  const response = await api.get(INVOICES_PATH, { timeout: 20000 });
-  const body = response.data;
-  const rows: any[] = Array.isArray(body)
-    ? body
-    : Array.isArray(body?.data)
-    ? body.data
-    : body && typeof body === 'object' && (body.vendor !== undefined || body.Vendor !== undefined)
-    ? [body]
-    : [];
+  // RLS handles tenant isolation — no explicit user_id filter needed.
+  const { data, error } = await supabase
+    .from('invoices')
+    .select('*')
+    .order('date', { ascending: false })
+    .limit(1);
 
-  const invoices = rows.map(normalizeInvoice).slice(0, MAX_HISTORY);
-  // Return the newest by date
-  if (!invoices.length) return null;
-  invoices.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  return invoices[0];
+  if (error || !data || data.length === 0) return null;
+  return data[0] as Invoice;
 };
 
 const Upload: React.FC = () => {
   const { uploadFile, status, progress, data, error, reset } = useInvoiceUpload();
   const { totalCount, isLoading: isHistoryLoading, error: historyError, refetch: refetchHistory } = useInvoiceList();
   const { t, textClass } = useLanguage();
+  const { isAnonymous } = useAuth();
   const navigate = useNavigate();
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [modalInvoice, setModalInvoice] = useState<Invoice | null>(null);
@@ -219,18 +183,61 @@ const Upload: React.FC = () => {
                   <p className={`mb-4 mt-2 text-sm text-slate-600 dark:text-slate-300 ${textClass}`}>
                     {t('upload.limitDesc')}
                   </p>
-                  <a
-                    href="https://wa.me/251701681571"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-2xl bg-cyan-500 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
-                  >
-                    {t('upload.upgradeWhatsapp')}
-                    <ArrowRight className="h-4 w-4" />
-                  </a>
+                  {isAnonymous ? (
+                    /* Anonymous guest — prompt account creation first */
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => navigate('/signup')}
+                        className="inline-flex items-center gap-2 rounded-2xl bg-cyan-500 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
+                      >
+                        {t('auth.signupButton')}
+                        <ArrowRight className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => navigate('/upgrade')}
+                        className="inline-flex items-center gap-2 rounded-2xl border border-slate-200/70 bg-white/80 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:text-cyan-600 dark:border-slate-800/80 dark:bg-slate-950/50 dark:text-slate-200 dark:hover:text-cyan-300"
+                      >
+                        {t('upgrade.title')}
+                      </button>
+                    </div>
+                  ) : (
+                    /* Permanent account — upgrade flow */
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => navigate('/upgrade')}
+                        className="inline-flex items-center gap-2 rounded-2xl bg-cyan-500 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
+                      >
+                        {t('upgrade.title')}
+                        <ArrowRight className="h-4 w-4" />
+                      </button>
+                      <a
+                        href="https://wa.me/251701681571"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 rounded-2xl border border-slate-200/70 bg-white/80 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:text-cyan-600 dark:border-slate-800/80 dark:bg-slate-950/50 dark:text-slate-200 dark:hover:text-cyan-300"
+                      >
+                        {t('upload.upgradeWhatsapp')}
+                      </a>
+                    </div>
+                  )}
                 </div>
                 <div className="border-t border-slate-200/70 bg-white/60 px-6 py-4 text-left text-sm text-slate-500 dark:border-slate-800/80 dark:bg-slate-950/40 dark:text-slate-400">
                   {t('upload.upgradeNote')}
+                  {isAnonymous && (
+                    <div className="mt-2">
+                      <button
+                        type="button"
+                        onClick={() => navigate('/signup')}
+                        className="font-semibold text-cyan-600 transition-colors hover:text-cyan-500 dark:text-cyan-300 dark:hover:text-cyan-200"
+                      >
+                        {t('auth.signupButton')} &rarr;
+                      </button>
+                      <span className="ml-1">{t('auth.noAccount')}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
