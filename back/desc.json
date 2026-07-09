@@ -1,7 +1,7 @@
 {
   "name": "Addis Invoice OCR",
-  "version": "3.5",
-  "description": "AI-powered invoice processing pipeline for small businesses in Addis Ababa, Ethiopia. Users submit invoices (PDF/JPG/PNG) via a React web dashboard, Telegram bot, or WhatsApp. n8n orchestrates Google Document AI for OCR text extraction and DeepSeek for structured data parsing. Extracted data (vendor, date, line items, grand total, TIN, FS_No, subtotal, VAT) is written to Google Sheets and surfaced in a searchable, filterable invoice history table with detail modals and PDF export. Multi-tenant filtering via persistent anonymous User_ID (UUIDv4) ensures each browser sees only its own invoices — no login required. Enforces a dual-layer 3-upload limit: a frontend soft-guard disables the upload zone, and a backend hard-guard short-circuits with HTTP 403 to protect AI token consumption.",
+  "version": "3.6",
+  "description": "AI-powered invoice processing pipeline for small businesses in Addis Ababa, Ethiopia. Users submit invoices (PDF/JPG/PNG) via a React web dashboard, Telegram bot, or WhatsApp. n8n orchestrates Google Document AI for OCR text extraction and DeepSeek for structured data parsing. Extracted data (vendor, date, line items, grand total, TIN, FS_No, subtotal, VAT) is written to Google Sheets and surfaced in a searchable, filterable invoice history table with detail modals and PDF export. Multi-tenant filtering via persistent anonymous User_ID (UUIDv4) ensures each browser sees only its own invoices — no login required. Enforces a dual-layer 3-upload limit: a frontend soft-guard disables the upload zone, and a backend hard-guard short-circuits with HTTP 403 to protect AI token consumption. Full dark/light theme support and bilingual Amharic/English UI with ~95 translation keys.",
 
   "architecture": {
     "frontend": {
@@ -13,38 +13,56 @@
         "axios",
         "react-router-dom",
         "react-hot-toast",
-        "react-icons",
+        "lucide-react",
         "date-fns",
-        "jspdf + jspdf-autotable"
+        "jspdf + jspdf-autotable",
+        "form-data"
       ],
       "branding": {
-        "logo": "/Alogo.png — custom logo image used in Navbar, footer, favicon, and landing page hero",
+        "logo": "/Alogo.png — custom logo image used in Navbar, footer, favicon, and landing page hero. Navbar also shows a gradient 'A' monogram fallback.",
         "primary_color": "#06B6D4 (cyan-500)",
         "whatsapp_color": "#25D366",
         "telegram_color": "#2AABEE"
       },
+      "theming": {
+        "dark_mode": "Full dark/light theme via ThemeProvider context + Tailwind 'class' strategy. Respects prefers-color-scheme on first visit, persists choice in localStorage key 'addis_invoice_theme'. CSS custom properties define light/dark palettes for all surfaces, text, borders, and accents.",
+        "bilingual": "Amharic/English toggle via LanguageProvider context (~95 translation keys in i18n/translations.ts). Persists choice in localStorage key 'addis_invoice_lang'. Applies 'lang-am' class to <html> for Amharic-specific CSS overrides (line-height, text transforms, column min-widths). LanguageToggle button in Navbar shows active language in cyan."
+      },
       "pages": {
-        "/": "Landing page with hero (video placeholder), how-it-works steps (3-step flow: snap → send to bot → data in Sheets), pricing tiers (Starter 300ETB/50 invoices, Pro 750ETB/500 invoices, Enterprise Custom), testimonials grid, FAQ accordion, and WhatsApp-driven CTA sections — all styled in cyan (#06B6D4) theme",
-        "/upload": "Drag-and-drop invoice upload with progress bar, processing spinner, result card (ResultsCard), detail modal (DetailsModal), and 'View Latest Invoice' button. 3-upload soft limit: when history count ≥3, the UploadZone is disabled and replaced with an amber 'Upload Limit Reached (3/3) — Upgrade to Premium' card linking to WhatsApp. Limit check fails open (upload enabled) during loading or API errors.",
-        "/invoices": "Searchable, filterable, sortable invoice history table (InvoiceTable) with 8 columns: Date, Vendor, TIN, FS_No, Total, Items, Source, Actions. Detail modal (DetailsModal) shows tax breakdown: Subtotal, VAT, Grand Total. PDF download via jsPDF. Client-side pagination (10 per page). Fetches from GET /webhook/invoices-history?userId=<UUID>."
+        "/": "Landing page with hero (interactive radial-glow background that tracks cursor), how-it-works steps (3-step flow: ScanSearch → Bot → Landmark), sample invoice result card (Abebe Trading PLC demo with TIN, FS_No, subtotal, total), pricing tiers (Starter 300ETB/50 invoices, Pro 750ETB/500 invoices, Enterprise Custom), features grid, FAQ accordion (data safety, Amharic support, cancellation), and WhatsApp-driven CTA sections — all styled in cyan (#06B6D4) theme",
+        "/upload": "Drag-and-drop invoice upload with free trial status bar (count / 3). Three-state limit guard: loading enables upload, error enables upload (fail-open), count ≥3 disables upload with premium upgrade card (Crown badge + WhatsApp CTA). Processing UI with progress bar and three-step checklist (upload, read/layout, prepare/tax). Result card (ResultsCard) on completion, detail modal (DetailsModal), and 'View Latest Invoice' button.",
+        "/invoices": "Searchable, filterable, sortable invoice history table (InvoiceTable) with 9 columns: Date, Vendor, Tax IDs (TIN + FS_No badges), Subtotal, VAT, Grand Total, Items, Source (cyan badge), Actions. Detail modal (DetailsModal) shows tax breakdown: Subtotal, VAT, Grand Total. PDF download via jsPDF. Client-side pagination (10 per page). Fetches from GET invoices-history?userId=<UUID>."
+      },
+      "layout": {
+        "shell": "App shell layout: sticky Navbar (top), collapsible SideDock (left, 270px expanded / 76px collapsed, hidden on mobile), <main> content area with dot-grid background, footer with logo + quick links + Telegram/WhatsApp support links, and FloatingSupport FAB (fixed bottom-right).",
+        "side_dock": "SideDock — fixed left sidebar visible on lg+ screens. Collapsible with smooth 200ms transition. Three grouped nav sections (Menu, Learn, Get Started) from navGroupDefs config. Active route indicator (cyan left-border bar). Items have staggered entry animations on expand. Uses NavLink for internal routes, <a> for external links, <button> for hash-section scrolling.",
+        "nav_groups": "navGroupDefs in lib/navigation.ts defines 3 groups with typed nav items: route (NavLink), hash (scrollToSection), external (<a>). Each item has a Lucide icon. scrollToSection handles route-aware hash scrolling (navigates to / then scrolls if not already on home)."
       },
       "components": [
-        "Navbar — sticky top nav with Alogo.png branding, anchor links to landing sections (#problem, #who, #how, #product, #faq), Upload/Invoices NavLinks, and 'Book a demo' CTA button. Responsive mobile hamburger menu.",
-        "FloatingSupport — fixed bottom-right floating action button (FAB) with headset icon and subtle pulse animation. Expands on click to reveal two channel picker links: Telegram Support (t.me/AddisInvoiceSupportBot) and WhatsApp Business (wa.me/251978407848). Closes on outside click or Escape. Styled with brand-color hovers: Telegram blue (#2AABEE) and WhatsApp green (#25D366).",
-        "UploadZone — drag-and-drop file upload area with type/size validation and visual drag-over feedback. Accepts disabled prop for limit guard — when disabled, applies opacity-60 + pointer-events-none.",
-        "ProcessingSpinner — animated spinner shown during OCR+AI extraction phase",
-        "ResultsCard — extracted invoice preview with vendor/date/total key fields, line items table (Item, Qty, Unit Price, Total), optional items_summary box, and action buttons (View Invoice, Save Invoice, Download PDF, Upload Another)",
-        "FilterBar — search by vendor or item text, date range inputs (From/To), clear button, and 'Showing X of Y invoices' count display. White card with rounded-2xl border and cyan focus rings.",
-        "InvoiceTable — paginated (10/page), sortable by Date/Vendor/Total columns with arrow indicators. 8 columns: Date, Vendor, TIN, FS_No, Total, Items, Source (color-coded badge: web=blue, email=purple, other=gray), Actions (view, download PDF, delete with confirm dialog). Skeleton loading rows (8-column) with shimmer animation. Empty state with document emoji and 'Upload your first invoice' message.",
-        "DetailsModal — full-screen overlay (bg-black/60 backdrop) with pop-in animation. Sticky header with 'Invoice Details' title. Two-column info grid: Date, Source, TIN, FS_No, Subtotal (conditional), VAT (conditional), Items count. Line items table (Item, Qty, Unit, Total) with grand total in footer. Items summary shown if present. Sticky footer with Download PDF (primary) and Close buttons. ESC key closes."
+        "Navbar — sticky top nav (z-40) with gradient 'A' monogram + 'Addis Invoice' text logo. Right-side controls: LanguageToggle (EN/AM), dark/light ThemeToggle, and hamburger menu for mobile. Mobile menu renders all three nav groups from navGroupDefs.",
+        "SideDock — fixed left sidebar (z-30, hidden on mobile, visible on lg+). Collapsible: 270px expanded, 76px collapsed. Three grouped nav sections from navGroupDefs. Active route indicator (cyan left-border bar). Staggered item entry animations. Uses NavLink for routes, <a> for external links (Telegram Support, WhatsApp Business, GitHub), <button> for hash navigation (How it Works, Pricing, Features, FAQ).",
+        "FloatingSupport — fixed bottom-right floating action button (FAB, z-50) with headset icon and subtle pulse ring animation. Expands on click to reveal two channel picker links: Telegram Support (t.me/AddisInvoiceSupportBot) and WhatsApp Business (wa.me/251701681571). Staggered menu item animations. Closes on outside click or Escape.",
+        "LanguageProvider — React context for bilingual Amharic/English support. Provides t() lookup function (~95 keys), language state, setLanguage, toggleLanguage, isAmharic boolean, and textClass helper ('i18n-am' class). Persists to localStorage key 'addis_invoice_lang'. Sets 'lang-am' class on <html>.",
+        "LanguageToggle — EN / AM toggle button in Navbar. Active language highlighted in cyan, inactive in gray. Calls toggleLanguage from LanguageProvider context.",
+        "ThemeProvider — React context for dark/light theme. Toggles 'dark' class on <html>. Persists choice to localStorage key 'addis_invoice_theme'. Initial value respects prefers-color-scheme media query.",
+        "UploadZone — drag-and-drop file upload area with type/size validation and visual drag-over feedback (glow ring animation). Accepts disabled prop for limit guard — when disabled, applies opacity-60 + pointer-events-none. Shows file format badges (PDF, JPG/PNG) and max size label (10 MB). Hidden file input triggered by click.",
+        "ProcessingSpinner — simple standalone spinning loader with cyan border animation. Available as a reusable component; Upload.tsx uses its own inline processing UI with progress bar and three-step checklist instead.",
+        "ResultsCard — post-processing result card. Shows extracted data: line items table (Item, Qty, Unit Price, Total) with row count, items summary box (if present), and specification sheet (Vendor, Invoice Date, Grand Total). Action buttons: View Invoice (cyan primary), Save Invoice, Download PDF, Upload Another. Currency formatted in ETB via Intl.NumberFormat.",
+        "FilterBar — search input (with Search icon), From/To date inputs, Clear button, and 'Showing X of Y invoices' count display. White card with rounded-2xl border and cyan focus rings.",
+        "InvoiceTable — paginated (10/page), sortable by Date/Vendor/Amount columns with arrow indicators. 9 columns: Date, Vendor, Tax IDs (TIN + FS_No badges), Subtotal, VAT, Grand Total, Items, Source (cyan badge), Actions (view, download PDF, delete with confirm dialog). Zebra-striped rows. Empty state with Inbox icon. Skeleton loading rendered inline in Invoices.tsx (9 columns, 5 rows, shimmer animation).",
+        "DetailsModal — full-screen overlay (z-100, bg-black/60 backdrop) with pop-in animation. Two-column layout: Vendor name + Grand Total large display. Info grid: Date, Source, TIN, FS_No, Subtotal, VAT, Items count. Line items table with grand total in footer. Items summary shown if present. Sticky footer: Download PDF (cyan primary) + Close buttons. ESC key closes.",
+        "SectionHeading — internal component in Home.tsx: centered heading with cyan accent bar, label badge, title, and description. Used by all landing page sections.",
+        "FAQItem — internal component in Home.tsx: disclosure (expand/collapse) accordion item with smooth height transition. Used in the FAQ section."
       ],
       "hooks": {
-        "useInvoiceUpload": "Manages upload lifecycle state machine: idle → uploading → processing → uploaded/completed/failed. Posts multipart FormData (fields: file + User_ID) to n8n POST webhook (path: a2bdee7f-0dcd-490b-891d-2a5d182ebabc) via centralized Axios client. Handles upload progress (XMLHttpRequest onUploadProgress), 150s timeout, AbortController cleanup, React StrictMode remount safety (mountedRef), response classification (OCR-3.0 ack vs legacy full invoice), and granular error classification (timeout, network, 413, 404, generic).",
-        "useInvoiceList": "Fetches invoice history via GET /webhook/invoices-history?userId=<UUID> (path: invoices-history). Normalizes raw response (handles bare arrays, {data: [...]} wrappers, or single-object edge case). Maps fields including new tax data: tin/TIN, fs_no/FS_No, subtotal/Subtotal, vat_amount/VAT_Amount/VAT. Provides search (vendor + items_summary), date range filtering, sorting (date/vendor/amount, asc/desc), client-side delete (local hide only — Google Sheets is source of truth), refetch, and totalCount for limit guard. Capped at 15 most recent rows."
+        "useInvoiceUpload": "Manages upload lifecycle state machine: idle → uploading → processing → uploaded/completed/failed. Posts multipart FormData (fields: file + user_id) to n8n POST webhook (path: a2bdee7f-0dcd-490b-891d-2a5d182ebabc) via centralized Axios client. Handles upload progress (Axios onUploadProgress), 150s timeout, AbortController cleanup, React StrictMode remount safety (mountedRef), response classification (OCR-3.0 ack vs legacy full invoice), and granular error classification (timeout, network, 413, 404, generic). Note: FormData field is named 'user_id' (lowercase) in code.",
+        "useInvoiceList": "Fetches invoice history via GET invoices-history?userId=<UUID>. Normalizes raw response (handles bare arrays, {data: [...]} wrappers, or single-object edge case). Maps fields including tax data: tin/TIN, fs_no/FS_No, subtotal/Subtotal, vat_amount/VAT_Amount/VAT. Provides search (vendor + items_summary), date range filtering, sorting (date/vendor/amount, asc/desc), client-side delete (local hide only — Google Sheets is source of truth), refetch, and totalCount for limit guard. Capped at 15 most recent rows."
       },
       "lib": {
-        "api": "Centralized Axios instance (baseURL from VITE_API_URL env var, fallback http://localhost:5678/webhook/, default 30s timeout). Exports getUserId() which reads/writes localStorage key 'addis_invoice_user_id': returns existing ID for returning visitors, generates crypto.randomUUID() (standard UUIDv4) for new visitors. Both upload (as FormData field User_ID) and history (as query param userId) send this ID for multi-tenant sheet filtering.",
-        "multi_tenant": "Each browser gets a persistent anonymous User_ID (UUIDv4 via Web Crypto API). On first visit, crypto.randomUUID() generates a standard UUID stored in localStorage under key 'addis_invoice_user_id'. The upload webhook receives it as FormData field 'User_ID'; the history webhook receives it as query param 'userId'. The Google Sheet connector node filters rows by User_ID column BEFORE returning data — no cross-tenant data ever reaches the client. No login, no cookies, no server-side sessions required."
+        "api": "Centralized Axios instance (baseURL from VITE_API_URL env var, fallback http://localhost:5678/webhook/, default 30s timeout). Exports getUserId() which reads/writes localStorage key 'addis_invoice_user_id': returns existing ID for returning visitors, generates crypto.randomUUID() (standard UUIDv4) for new visitors. Both upload (as FormData field user_id) and history (as query param userId) send this ID for multi-tenant sheet filtering.",
+        "multi_tenant": "Each browser gets a persistent anonymous User_ID (UUIDv4 via Web Crypto API). On first visit, crypto.randomUUID() generates a standard UUID stored in localStorage under key 'addis_invoice_user_id'. The upload webhook receives it as FormData field 'user_id'; the history webhook receives it as query param 'userId'. The Google Sheet connector node filters rows by User_ID column BEFORE returning data — no cross-tenant data ever reaches the client. No login, no cookies, no server-side sessions required.",
+        "i18n": "Complete bilingual dictionary (~95 translation keys) in i18n/translations.ts covering nav, hero, how-it-works, pricing, features, FAQ, CTA, upload, table, invoices, filter, results, modal, support, footer, and error states. Exports interpolate() helper for template strings like '{count}'. All UI text rendered via t('key') from LanguageProvider context.",
+        "navigation": "navGroupDefs in navigation.ts defines 3 grouped nav sections (Menu, Learn, Get Started) with typed items (route/hash/external), each with a Lucide icon. Exports scrollToSection (hash scroll with route-aware behavior — navigates to / then scrolls if not on home) and scrollToHash (in-page scroll)."
       },
       "environments": {
         "development": "VITE_API_URL set in .env.development (local n8n or tunneled instance)",
@@ -58,12 +76,11 @@
       "instance": "https://n8n.magnetai.cc (port 5678 locally)",
       "workflows": {
         "OCR-3.3-web": {
-          "file": "OCR-3.0-web dev.json",
           "description": "Main invoice processing workflow with three entry points: Web upload (POST multipart/form-data), Telegram bot, and WhatsApp. Supports multi-tenant filtering via User_ID field. Enforces backend hard-guard: queries tracking sheet immediately after file trigger; if User_ID row count ≥3, short-circuits with HTTP 403 before reaching OCR/AI nodes.",
           "web_path": {
-            "trigger": "POST /webhook/a2bdee7f-0dcd-490b-891d-2a5d182ebabc (multipart/form-data with fields: file, User_ID)",
+            "trigger": "POST /webhook/a2bdee7f-0dcd-490b-891d-2a5d182ebabc (multipart/form-data with fields: file, user_id)",
             "flow": [
-              "1. Webhook receives file upload + User_ID from frontend",
+              "1. Webhook receives file upload + user_id from frontend",
               "2. Hard-Guard Quota Check — queries Google Sheets tracking sheet for existing rows matching this User_ID; if count ≥3, returns HTTP 403 immediately to protect DeepSeek token budget",
               "3. Generate Job ID — creates job_id, status=queued, passes binary file and User_ID forward",
               "4. Respond to Webhook — immediately returns {\"status\":\"success\",\"message\":\"File uploaded successfully! Your invoice is being processed in the background.\"} with CORS headers (Access-Control-Allow-Origin: *)",
@@ -88,7 +105,7 @@
           },
           "whatsapp_path": {
             "trigger": "WhatsApp channel receives invoice file",
-            "flow": "WhatsApp integration (added v3.3) — receives invoice files via WhatsApp Business API and feeds into the shared OCR+AI pipeline"
+            "flow": "WhatsApp integration — receives invoice files via WhatsApp Business API and feeds into the shared OCR+AI pipeline"
           },
           "ai_models": {
             "ocr": "Google Document AI — australia-southeast1 region, processor for PDF/image OCR text extraction",
@@ -102,9 +119,9 @@
             "items_summary": "string — concise text summary of purchased items/services (empty if not an invoice)"
           },
           "multi_tenant": {
-            "user_id_field": "Sent from frontend as User_ID in FormData (upload POST) and as userId query param (history GET). Persisted per-row in Google Sheets column 'User_ID' so the get-invoices webhook can filter rows to the requesting tenant.",
-            "frontend_id_format": "UUIDv4 via crypto.randomUUID() — generated once per browser on first visit, stored in localStorage under key 'addis_invoice_user_id'. Existing users with legacy anon_<random><timestamp> IDs are preserved for backward compatibility.",
-            "privacy_fix": "The Google Sheet connector node (ID: 1XM1WgFbVKHvGsrzAwrCqbOi-O4ZqnIbCqO0sK7zlgSM, Sheet: OCR-dev → Sheet1) now explicitly filters rows matching the requesting User_ID at the database/connector node layer BEFORE delivering the payload over the network. Previously all rows were pulled and filtered in a downstream Code node, creating a data-leak vulnerability where cross-tenant data was transmitted in plaintext."
+            "user_id_field": "Sent from frontend as user_id in FormData (upload POST) and as userId query param (history GET). Persisted per-row in Google Sheets column 'User_ID' so the get-invoices webhook can filter rows to the requesting tenant.",
+            "frontend_id_format": "UUIDv4 via crypto.randomUUID() — generated once per browser on first visit, stored in localStorage under key 'addis_invoice_user_id'.",
+            "privacy_fix": "The Google Sheet connector node now explicitly filters rows matching the requesting User_ID at the database/connector node layer BEFORE delivering the payload over the network. Previously all rows were pulled and filtered in a downstream Code node, creating a data-leak vulnerability where cross-tenant data was transmitted in plaintext."
           },
           "upload_limit_guard": {
             "frontend_soft_guard": "Upload.tsx calls useInvoiceList hook on mount to get totalCount. When totalCount ≥3: UploadZone receives disabled={true} (opacity-60, pointer-events-none, file input disabled). An amber card displays 'Upload Limit Reached (3/3) — Upgrade to Premium' with a WhatsApp CTA link. Fails open: if the history check is loading or errors, the upload zone remains enabled.",
@@ -124,16 +141,15 @@
               "code": 403,
               "message": "Upload limit reached. You have used all 3 free uploads. Upgrade to Premium to continue."
             },
-            "async_result": "Written to Google Sheets (with User_ID column), surfaced via GET /webhook/invoices-history?userId=<UUID>"
+            "async_result": "Written to Google Sheets (with User_ID column), surfaced via GET invoices-history?userId=<UUID>"
           }
         },
         "get-invoices": {
-          "file": "OCR-get-invoices dev(1).json",
           "description": "GET webhook that reads rows from Google Sheets filtered by User_ID at the connector node layer, takes the 15 most recent, reverses them (newest first), and returns as a JSON array with normalized field names including tax fields (TIN, FS_No, Subtotal, VAT_Amount).",
           "endpoint": "GET /webhook/invoices-history?userId=<UUID>",
           "flow": [
             "1. Webhook receives GET request with ?userId=<UUID> query param",
-            "2. Google Sheets node — reads rows from Sheet (ID: 1XM1WgFbVKHvGsrzAwrCqbOi-O4ZqnIbCqO0sK7zlgSM, Sheet: OCR-dev → Sheet1), filters by User_ID column at connector level (no cross-tenant data transmitted)",
+            "2. Google Sheets node — reads rows from Sheet, filters by User_ID column at connector level (no cross-tenant data transmitted)",
             "3. Code node — slices last 15 rows, reverses order (newest first), normalizes field names: vendor, date, grand_total (from Total Amount), items_summary (from Summary), source, id, tin (TIN), fs_no (FS_No), subtotal (Subtotal), vat_amount (VAT_Amount)",
             "4. Returns JSON array to client with CORS headers"
           ],
@@ -163,23 +179,23 @@
   },
 
   "data_flow": {
-    "upload": "User submits file via Web (drag-and-drop at /upload) / Telegram bot / WhatsApp → Frontend attaches User_ID (UUIDv4 from localStorage) as FormData field → POST to n8n webhook (a2bdee7f-0dcd-490b-891d-2a5d182ebabc) → Backend hard-guard quota check (≥3 rows for this User_ID → 403 short-circuit) → n8n acknowledges immediately with {\"status\":\"success\"} → Background pipeline: Google Document AI OCR → DeepSeek v4-flash AI parsing (vendor, date, total, items, TIN, FS_No, subtotal, VAT) → Append to Google Sheets (row includes User_ID column) → Telegram/WhatsApp notification to user",
-    "history": "Frontend GET /webhook/invoices-history?userId=<UUID> → n8n Google Sheets node reads rows, filters by User_ID column at connector layer (privacy fix) → Code node selects last 15, reverses (newest first), normalizes field names → Returns JSON array → Frontend InvoiceTable renders 8-column sortable table with TIN, FS_No, Total",
+    "upload": "User submits file via Web (drag-and-drop at /upload) / Telegram bot / WhatsApp → Frontend attaches user_id (UUIDv4 from localStorage) as FormData field → POST to n8n webhook (a2bdee7f-0dcd-490b-891d-2a5d182ebabc) → Backend hard-guard quota check (≥3 rows for this User_ID → 403 short-circuit) → n8n acknowledges immediately with {\"status\":\"success\"} → Background pipeline: Google Document AI OCR → DeepSeek v4-flash AI parsing (vendor, date, total, items, TIN, FS_No, subtotal, VAT) → Append to Google Sheets (row includes User_ID column) → Telegram/WhatsApp notification to user",
+    "history": "Frontend GET invoices-history?userId=<UUID> → n8n Google Sheets node reads rows, filters by User_ID column at connector layer (privacy fix) → Code node selects last 15, reverses (newest first), normalizes field names → Returns JSON array → Frontend InvoiceTable renders 9-column sortable table with TIN, FS_No, Subtotal, VAT, Grand Total",
     "detail_view": "User clicks View Invoice (eye icon in table or button on ResultsCard) → DetailsModal overlay opens with full invoice data: vendor, date, TIN, FS_No, subtotal, VAT, grand total, line items table, items summary → Download PDF button generates formatted PDF via jsPDF + jspdf-autotable"
   },
 
   "channels": {
-    "web": "React dashboard at /upload (drag-and-drop with 3-upload limit guard) and /invoices (searchable/filterable 8-column history table with tax breakdown)",
+    "web": "React dashboard at /upload (drag-and-drop with 3-upload limit guard) and /invoices (searchable/filterable 9-column history table with tax breakdown)",
     "telegram": {
       "support_bot": "https://t.me/AddisInvoiceSupportBot — handles scaled user ticketing. Inbound messages are routed directly to the private Admin Operations Group (chat ID: -1003690948102) for centralized support team triage and response.",
       "invoice_bot": "Telegram bot accepting invoice file submissions and returning extracted summaries. Integrated into the shared OCR-3.3 workflow pipeline."
     },
     "whatsapp": {
-      "business_number": "251978407848",
+      "business_number": "251701681571",
       "usage": "WhatsApp Business channel for: invoice file submission, free-trial signups (7-day trial with pre-filled message), enterprise inquiries, and premium upgrade flow from the upload limit guard CTA.",
-      "landing_page": "Home page hero CTA ('Try Free for 7 Days'), all pricing tier CTAs, and footer CTA ('Message us on WhatsApp') link to wa.me/251978407848 with context-specific pre-filled messages."
+      "landing_page": "Home page hero CTA ('Try Free for 7 Days'), all pricing tier CTAs, and footer CTA ('Message us on WhatsApp') link to wa.me/251701681571 with context-specific pre-filled messages."
     },
-    "floating_widget": "FloatingSupport FAB (fixed bottom-right, z-50) presents a headset icon with slow-pulse ring. On click, expands two channel buttons: 'Telegram Support' (t.me/AddisInvoiceSupportBot, Telegram-blue hover) and 'WhatsApp Business' (wa.me/251978407848, WhatsApp-green hover). Present on all pages."
+    "floating_widget": "FloatingSupport FAB (fixed bottom-right, z-50) presents a headset icon with slow-pulse ring. On click, expands two channel buttons: 'Telegram Support' (t.me/AddisInvoiceSupportBot, Telegram-blue hover) and 'WhatsApp Business' (wa.me/251701681571, WhatsApp-green hover). Staggered menu item animations. Present on all pages."
   },
 
   "pricing": {
@@ -189,7 +205,7 @@
       { "name": "Enterprise", "price": "Custom", "invoices": "unlimited", "features": ["Everything in Pro", "Dedicated account manager", "Custom integrations", "SLA guarantee"] }
     ],
     "trial": "7-day free trial via WhatsApp — no credit card required",
-    "whatsapp_number": "251978407848",
+    "whatsapp_number": "251701681571",
     "free_tier_upload_limit": 3
   },
 
@@ -199,18 +215,23 @@
     "Added 'View Invoice' button to upload result screen — fetches latest invoice from API and opens DetailsModal",
     "Centralized API configuration in lib/api.ts with VITE_API_URL env var and localhost fallback",
     "Separated dev/prod environments with single VITE_API_URL in .env files",
-    "Redesigned homepage with landing page sections (hero, how-it-works, pricing, testimonials, FAQ, footer CTA) and cyan (#06B6D4) color theme",
+    "Redesigned homepage with landing page sections (hero, how-it-works, pricing, features, FAQ, footer CTA) and cyan (#06B6D4) color theme",
     "Rebranded all Ledger references to Addis Invoice with Alogo.png custom logo across Navbar, footer, and favicon",
     "Implemented multi-tenant filtering via persistent anonymous User_ID (localStorage) passed to n8n webhooks — each browser sees only its own invoices with no login required",
-    "Upgraded anonymous User_ID generation from pseudo-random (anon_<random><timestamp>) to standard UUIDv4 via crypto.randomUUID() for new visitors — existing legacy IDs preserved for backward compatibility",
-    "Renamed upload FormData field from 'user_id' to 'User_ID' for consistent casing with Google Sheets column header",
-    "Switched invoice history endpoint from UUID-based path (8d8ca621-...) to structured readable path: GET /webhook/invoices-history?userId=<UUID>",
+    "Upgraded anonymous User_ID generation to standard UUIDv4 via crypto.randomUUID() for new visitors — existing legacy IDs preserved for backward compatibility",
+    "Switched invoice history endpoint to structured readable path: GET invoices-history?userId=<UUID>",
     "Added TIN, FS_No, Subtotal, and VAT_Amount fields to InvoiceData type, invoice history table (InvoiceTable), detail modal (DetailsModal), PDF export, and API response normalization",
     "Fixed Google Sheets privacy leak: connector node now filters rows by User_ID column at the database layer BEFORE payload transmission — cross-tenant data no longer traverses the network",
     "Implemented dual-layer 3-upload limit guard: frontend soft-guard disables UploadZone at count ≥3 with upgrade CTA; backend hard-guard short-circuits pipeline with HTTP 403 before consuming OCR/AI tokens",
-    "Added FloatingSupport FAB widget (fixed bottom-right) with Telegram Support Bot and WhatsApp Business channel picker — replaces generic footer social icons with dedicated support infrastructure",
-    "Updated all WhatsApp links across landing page, pricing CTAs, footer, and upload limit guard to use WhatsApp Business number 251978407848",
-    "Configured Telegram Support Bot (t.me/AddisInvoiceSupportBot) routing inbound messages to private Admin Operations Group (-1003690948102) for centralized ticket management"
+    "Added FloatingSupport FAB widget (fixed bottom-right) with Telegram Support Bot and WhatsApp Business channel picker — staggered menu animations, closes on outside click or Escape",
+    "Updated all WhatsApp links across landing page, pricing CTAs, footer, and upload limit guard to use WhatsApp Business number 251701681571",
+    "Configured Telegram Support Bot (t.me/AddisInvoiceSupportBot) routing inbound messages to private Admin Operations Group (-1003690948102) for centralized ticket management",
+    "Implemented full dark/light theme support via ThemeProvider context + CSS custom properties — respects prefers-color-scheme, persists choice to localStorage",
+    "Implemented bilingual Amharic/English UI (~95 translation keys) via LanguageProvider context + LanguageToggle button in Navbar — persists choice to localStorage, Amharic CSS overrides via lang-am class",
+    "Added collapsible SideDock left sidebar (270px/76px, lg+ only) with three grouped nav sections from navGroupDefs config, active route indicator, and staggered entry animations",
+    "Replaced react-icons with lucide-react for consistent icon styling across all components and navigation",
+    "Added SectionHeading and FAQItem internal components to Home.tsx for consistent landing page section headers and accordion items",
+    "Scrubbed legacy n8n workflow JSON backup files from git history (OCR-2.0-web, OCR-3.3 whatsup, OCR-3.0-web dev, OCR-get-invoices dev) — repo is now workflow-file-free"
   ],
 
   "target_users": "Small businesses in Addis Ababa, Ethiopia. Supports Amharic and English invoice formats. Multi-tenant architecture allows shared Google Sheet with per-browser data isolation via User_ID column filtering at the connector node layer.",
@@ -220,10 +241,10 @@
   "processing_timeout": "150 seconds",
 
   "deployment": {
-    "frontend": "Vercel (build: npm run build, output: dist/)",
+    "frontend": "Vercel (build: npm run build, output: front/dist/, SPA routing via _redirects: /* /index.html 200)",
     "backend": "n8n cloud instance at n8n.magnetai.cc",
-    "repository": "git@github.com:Mavprime/OCR-Dev.git (main branch)"
+    "repository": "https://github.com/Mavprime/ocr-dev.git (main branch)"
   },
 
-  "tags": ["ocr", "invoice-processing", "n8n", "react", "typescript", "tailwind", "google-document-ai", "deepseek", "deepseek-v4-flash", "telegram-bot", "whatsapp-business", "ethiopia", "small-business", "multi-tenant", "anonymous-user-id", "uuid", "upload-limit-guard", "floating-support-widget"]
+  "tags": ["ocr", "invoice-processing", "n8n", "react", "typescript", "tailwind", "google-document-ai", "deepseek", "deepseek-v4-flash", "telegram-bot", "whatsapp-business", "ethiopia", "small-business", "multi-tenant", "anonymous-user-id", "uuid", "upload-limit-guard", "floating-support-widget", "dark-mode", "bilingual", "amharic", "side-dock"]
 }
