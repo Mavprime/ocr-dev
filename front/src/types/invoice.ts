@@ -16,6 +16,7 @@ export interface InvoiceData {
   fs_no?: string;        // Fiscal Station Number
   subtotal?: number;     // Amount before VAT
   vat_amount?: number;   // VAT amount
+  upload_id?: string;    // Client-generated correlation token for Realtime matching
 }
 
 export interface Invoice extends InvoiceData {

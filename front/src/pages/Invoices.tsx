@@ -69,8 +69,8 @@ const Invoices: React.FC = () => {
     doc.save(`invoice-${invoice.vendor.toLowerCase().replace(/\s/g, '-')}.pdf`);
   };
 
-  const handleDelete = (id: string) => {
-    deleteInvoice(id);
+  const handleDelete = async (id: string) => {
+    await deleteInvoice(id);
   };
 
   const SkeletonRow = () => (

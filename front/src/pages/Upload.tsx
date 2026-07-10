@@ -36,7 +36,7 @@ const fetchLatestInvoice = async (): Promise<Invoice | null> => {
 };
 
 const Upload: React.FC = () => {
-  const { uploadFile, status, progress, data, error, reset } = useInvoiceUpload();
+  const { uploadFile, status, progress, data, latestProcessedInvoice, error, reset } = useInvoiceUpload();
   const { totalCount, isLoading: isHistoryLoading, error: historyError, refetch: refetchHistory } = useInvoiceList();
   const { t, textClass } = useLanguage();
   const { isAnonymous } = useAuth();
@@ -108,8 +108,18 @@ const Upload: React.FC = () => {
     doc.save(`invoice-${(data.vendor || 'invoice').toLowerCase().replace(/\s/g, '-')}.pdf`);
   };
 
-  /** Fetch the latest invoice from the API and open it in the detail modal. */
+  /** Open the detail modal for the invoice that was just processed.
+   *  Prefers the exact invoice from the Realtime INSERT event; falls back
+   *  to polling Supabase for the latest row. */
   const handleViewLatestInvoice = async () => {
+    // ── Happy path: Realtime already delivered the exact row ────────────
+    if (latestProcessedInvoice) {
+      setModalInvoice(latestProcessedInvoice);
+      setShowDetailModal(true);
+      return;
+    }
+
+    // ── Fallback: poll Supabase (e.g. Realtime hasn't fired yet) ───────
     setIsFetchingInvoice(true);
     try {
       const latest = await fetchLatestInvoice();
@@ -345,7 +355,7 @@ const Upload: React.FC = () => {
       )}
 
       <DetailsModal
-        invoice={showDetailModal ? (modalInvoice || data || null) : null}
+        invoice={showDetailModal ? (modalInvoice || latestProcessedInvoice || data || null) : null}
         onClose={() => { setShowDetailModal(false); setModalInvoice(null); }}
       />
 
