@@ -1,4 +1,4 @@
-# Addis Invoice Dashboard-
+# Addis Invoice Dashboard
 
 A simple, mobile-friendly React dashboard for AI-powered invoice processing targeted at small businesses in Addis Ababa, Ethiopia.
 
