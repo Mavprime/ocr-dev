@@ -1,6 +1,7 @@
 {
   "name": "Addis Invoice OCR",
   "version": "3.7.1",
+  "commit": "6e7d012e9480ad2d0c3c24104c59e1c4135d4844",
   "description": "AI-powered invoice processing pipeline for small businesses in Addis Ababa, Ethiopia. Users submit invoices (PDF/JPG/PNG) via a React web dashboard, Telegram bot, or WhatsApp. n8n orchestrates Google Document AI for OCR text extraction and DeepSeek for structured data parsing. Extracted data (vendor, date, line items, grand total, TIN, FS_No, subtotal, VAT) is persisted to Supabase (with Row-Level Security) and Google Sheets as a fallback, then surfaced in a searchable, filterable invoice history table with detail modals and PDF export. Multi-tenant isolation via Supabase Auth: anonymous sign-in on first visit provisions a secure JWT-backed session; RLS policies scope all database queries to the authenticated user — no localStorage UUIDs or manual tenant filtering needed. Authenticated routes (/upload, /invoices, /upgrade) are gated behind ProtectedRoute. Users can optionally upgrade to email/password accounts via Login/Signup pages, preserving their anonymous invoice history. Enforces a dual-layer 3-upload limit: a frontend soft-guard disables the upload zone, and a backend hard-guard short-circuits with HTTP 403 to protect AI token consumption. Full dark/light theme support and bilingual Amharic/English UI with ~250 translation keys.",
 
   "architecture": {
@@ -81,7 +82,7 @@
         "development": "VITE_API_URL=https://n8n.magnetai.cc/webhook/ in .env.development (currently points to production — same as .env.production)",
         "production": "VITE_API_URL=https://n8n.magnetai.cc/webhook/ in .env.production",
         "fallback": "http://localhost:5678/webhook/",
-        "supabase": "VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env"
+        "supabase": "VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env and .env.production (both files include Supabase credentials so Cloudflare Pages builds have them available)"
       }
     },
 
