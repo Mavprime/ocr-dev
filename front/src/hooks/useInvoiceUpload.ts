@@ -6,7 +6,7 @@ import api from '../lib/api';
 import supabase from '../lib/supabaseClient';
 
 // Webhook trigger path appended to VITE_API_URL (or its localhost fallback).
-const UPLOAD_PATH = 'a2bdee7f-0dcd-490b-891d-2a5d182ebabc';
+const UPLOAD_PATH = '8a102812-cb84-422b-b168-a20f9de68f4b';
 
 /**
  * The n8n web flow is synchronous: it receives the file, runs Google Document AI
